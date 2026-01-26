@@ -19,20 +19,49 @@ logs/
 riderModule.iml
 _ReSharper.Caches/
 
-## Node / Angular
+## Node / Angular (applies to subfolders)
 node_modules/
 npm-debug.log
 yarn-error.log
-/dist/
-/tmp/
-/out-tsc/
-/bazel-out/
-/.angular/cache
+dist/
+tmp/
+out-tsc/
+bazel-out/
+.angular/cache/
 
 # System Files
 .DS_Store
 Thumbs.db
-/Backend/datasets.db
-/Backend/datasets.db-shm
-/Backend/datasets.db-wal
-/Frontend/dist/intekrator-frontend/*
+
+# Project Specific
+/Backend/Uploads/
+/Backend/datasets.db*
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/.tsbuildinfo
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_common.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_common.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_common_http.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_common_http.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_core.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_core.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_forms.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_forms.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_platform-browser.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_platform-browser.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_router.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/@angular_router.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/_metadata.json
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/angular-compiler.db
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/angular-compiler.db-lock
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/chunk-C7W7QGGK.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/chunk-C7W7QGGK.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/chunk-CCNWVJX4.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/chunk-CCNWVJX4.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/chunk-HEJPDTGB.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/chunk-HEJPDTGB.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/chunk-HR3HJEUA.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/chunk-HR3HJEUA.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/chunk-RW5RBME5.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/chunk-RW5RBME5.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/lucide-angular.js
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/lucide-angular.js.map
+/Frontend/.angular/cache/21.1.1/intekrator-frontend/vite/deps/package.json
