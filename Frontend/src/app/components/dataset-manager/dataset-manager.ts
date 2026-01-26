@@ -18,6 +18,10 @@ export class DatasetManagerComponent implements OnInit {
   selectedDataset = signal<Dataset | null>(null);
   selectedVersion = signal<DatasetVersion | null>(null);
 
+  // Layout State
+  viewMode = signal<'new' | 'history'>('new');
+  isSidebarCollapsed = signal(false);
+
   // Upload Form
   versionNumber = '';
   versionNotes = '';
@@ -36,6 +40,7 @@ export class DatasetManagerComponent implements OnInit {
   selectDataset(ds: Dataset) {
     this.selectedDataset.set(ds);
     this.selectedVersion.set(null);
+    this.viewMode.set('new'); // Reset to new version view when selecting dataset
     // Refresh datasets to get latest versions
     this.datasetService.getDataset(ds.id).subscribe(data => {
       this.selectedDataset.set(data);
@@ -56,6 +61,41 @@ export class DatasetManagerComponent implements OnInit {
     const file: File = event.target.files[0];
     if (file) {
       this.selectedFile = file;
+    }
+  }
+
+  // Layout Methods
+  toggleSidebar() {
+    this.isSidebarCollapsed.update(v => !v);
+  }
+
+  setViewMode(mode: 'new' | 'history') {
+    this.viewMode.set(mode);
+  }
+
+  // Drag & Drop
+  isDragOver = signal(false);
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver.set(true);
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver.set(false);
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragOver.set(false);
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.selectedFile = files[0];
     }
   }
 
@@ -166,4 +206,3 @@ export class DatasetManagerComponent implements OnInit {
     }
   }
 }
-

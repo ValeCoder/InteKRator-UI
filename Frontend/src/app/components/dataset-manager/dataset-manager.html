@@ -1,14 +1,21 @@
 <div class="manager-layout">
     <!-- List Section -->
-    <aside class="dataset-list card">
+    <aside class="dataset-list card" [class.collapsed]="isSidebarCollapsed()">
         <div class="list-header">
-            <h3>Datensätze</h3>
-            <button class="btn-primary small" (click)="createNew()">
-                <lucide-icon name="plus" class="icon-sm"></lucide-icon> Neu
-            </button>
+            <h3 *ngIf="!isSidebarCollapsed()">Datensätze</h3>
+            <div class="header-actions">
+                <button class="btn-icon small" (click)="toggleSidebar()">
+                    <lucide-icon [name]="isSidebarCollapsed() ? 'chevron-right' : 'chevron-left'"
+                        class="icon-sm"></lucide-icon>
+                </button>
+            </div>
         </div>
 
-        <div class="list-content">
+        <button *ngIf="!isSidebarCollapsed()" class="btn-primary small full-width-btn" (click)="createNew()">
+            <lucide-icon name="plus" class="icon-sm"></lucide-icon> Neu
+        </button>
+
+        <div class="list-content" *ngIf="!isSidebarCollapsed()">
             <div *ngFor="let ds of datasets()" class="list-item" [class.active]="selectedDataset()?.id === ds.id"
                 (click)="selectDataset(ds)">
                 <div class="item-info">
@@ -22,21 +29,39 @@
                 </div>
             </div>
         </div>
+
+        <!-- Collapsed State Icons -->
+        <div class="list-content collapsed-icons" *ngIf="isSidebarCollapsed()">
+            <div *ngFor="let ds of datasets()" class="list-item icon-only"
+                [class.active]="selectedDataset()?.id === ds.id" (click)="selectDataset(ds)" title="{{ds.name}}">
+                <span class="item-initial">{{ ds.name.charAt(0) }}</span>
+            </div>
+            <button class="btn-icon icon-only add-btn" (click)="createNew()" title="Neuer Datensatz">
+                <lucide-icon name="plus" class="icon-sm"></lucide-icon>
+            </button>
+        </div>
     </aside>
 
     <!-- Editor Section -->
-    <section class="dataset-editor card" *ngIf="selectedDataset(); else emptyState">
+    <section class="dataset-editor" *ngIf="selectedDataset(); else emptyState">
         <div class="editor-header">
             <div class="header-info">
                 <input class="title-input" [(ngModel)]="selectedDataset()!.name" placeholder="Name des Datensatzes">
             </div>
+            <div class="tab-navigation">
+                <button class="tab-btn" [class.active]="viewMode() === 'new'" (click)="setViewMode('new')">
+                    <lucide-icon name="upload" class="icon-sm"></lucide-icon> Neue Version
+                </button>
+                <button class="tab-btn" [class.active]="viewMode() === 'history'" (click)="setViewMode('history')">
+                    <lucide-icon name="history" class="icon-sm"></lucide-icon> Historie / Versionen
+                </button>
+            </div>
         </div>
 
-        <div class="management-grid">
-            <!-- Upload Section -->
-            <div class="upload-section">
-                <div class="section-title-row">
-                    <h4><lucide-icon name="upload" class="icon-sm"></lucide-icon> Neue Version</h4>
+        <div class="management-content">
+            <!-- New Version Tab -->
+            <div class="tab-content" *ngIf="viewMode() === 'new'">
+                <div class="section-actions">
                     <button class="btn-secondary small" (click)="toggleManualMode()">
                         {{ isManualMode() ? 'Zu Datei-Upload wechseln' : 'Manuell im Grid erstellen' }}
                     </button>
@@ -44,29 +69,47 @@
 
                 <!-- File Upload Form -->
                 <div class="upload-form" *ngIf="!isManualMode()">
-                    <div class="form-group">
-                        <label>Versionsnummer *</label>
-                        <input type="text" [(ngModel)]="versionNumber" placeholder="z.B. 1.0.1" class="input-base">
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label>Versionsnummer *</label>
+                            <input type="text" [(ngModel)]="versionNumber" placeholder="z.B. 1.0.1" class="input-base">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Notizen</label>
-                        <textarea [(ngModel)]="versionNotes" placeholder="Was hat sich geändert?"
-                            class="input-base"></textarea>
-                    </div>
+
                     <div class="form-group">
                         <label>Datei (.txt, .dat) *</label>
-                        <input type="file" (change)="onFileSelected($event)" accept=".txt,.dat" class="input-base">
+                        <div class="drag-drop-zone" [class.drag-over]="isDragOver()" (dragover)="onDragOver($event)"
+                            (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+                            <input type="file" (change)="onFileSelected($event)" accept=".txt,.dat" #fileInput hidden>
+                            <div class="drop-content" (click)="fileInput.click()">
+                                <lucide-icon name="upload" class="icon-xl"></lucide-icon>
+                                <p *ngIf="!selectedFile">Datei hier ablegen oder klicken zum Auswählen</p>
+                                <p *ngIf="selectedFile" class="selected-file-name">{{ selectedFile.name }}</p>
+                                <span class="file-hint">.txt oder .dat Dateien</span>
+                            </div>
+                        </div>
                     </div>
-                    <button class="btn-primary" (click)="uploadVersion()" [disabled]="!selectedFile || !versionNumber">
-                        Hochladen
-                    </button>
+
+                    <div class="form-group">
+                        <label>Notizen</label>
+                        <textarea [(ngModel)]="versionNotes" placeholder="Was hat sich geändert?" class="input-base"
+                            rows="3"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn-primary" (click)="uploadVersion()"
+                            [disabled]="!selectedFile || !versionNumber">
+                            Hochladen
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Manual Grid Editor -->
                 <div class="manual-editor" *ngIf="isManualMode()">
                     <div class="form-group">
                         <label>Versionsnummer *</label>
-                        <input type="text" [(ngModel)]="versionNumber" placeholder="z.B. 1.0.1" class="input-base">
+                        <input type="text" [(ngModel)]="versionNumber" placeholder="z.B. 1.0.1" class="input-base"
+                            style="max-width: 200px;">
                     </div>
 
                     <div class="schema-config">
@@ -109,14 +152,15 @@
                 </div>
             </div>
 
-            <!-- Version History -->
-            <div class="history-section">
-                <h4><lucide-icon name="history" class="icon-sm"></lucide-icon> Versionen</h4>
-                <div class="version-list">
+            <!-- Version History Tab -->
+            <div class="tab-content" *ngIf="viewMode() === 'history'">
+                <div class="history-list">
                     <div *ngFor="let v of selectedDataset()?.versions" class="version-item">
                         <div class="version-info">
-                            <span class="v-number">v{{ v.versionNumber }}</span>
-                            <span class="v-date">{{ v.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                            <div class="v-header">
+                                <span class="v-number">v{{ v.versionNumber }}</span>
+                                <span class="v-date">{{ v.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                            </div>
                             <p class="v-notes" *ngIf="v.notes">{{ v.notes }}</p>
                         </div>
                         <div class="v-actions">

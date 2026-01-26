@@ -20,8 +20,11 @@ import {
   ScrollText,
   Binary,
   Upload,
-  History
+  History,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-angular';
+
 
 import { routes } from './app.routes';
 
@@ -48,7 +51,9 @@ export const appConfig: ApplicationConfig = {
       ScrollText,
       Binary,
       Upload,
-      History
+      History,
+      ChevronLeft,
+      ChevronRight
     }))
   ]
 };
