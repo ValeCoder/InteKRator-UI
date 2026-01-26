@@ -3,17 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backend", "Backend\InteKRator_UI.csproj", "{07454B03-BFC2-4477-B878-C71AB5F5DB7A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Frontend", "Frontend\Frontend.csproj", "{A9E19894-3FF7-4B17-B726-068305A12B8C}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1F3F3D2C-546B-45DB-8D2B-F814EC28BE01}"
 	ProjectSection(SolutionItems) = preProject
 		compose.yaml = compose.yaml
 		InteKRator_official_README.md = InteKRator_official_README.md
 		.gitignore = .gitignore
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{A9E19894-3FF7-4B17-B726-068305A12B8C}"
-	ProjectSection(SolutionItems) = preProject
-		Frontend\package.json = Frontend\package.json
-		Frontend\angular.json = Frontend\angular.json
+		InteKRator.jar = InteKRator.jar
 	EndProjectSection
 EndProject
 Global
@@ -26,5 +23,9 @@ Global
 		{07454B03-BFC2-4477-B878-C71AB5F5DB7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{07454B03-BFC2-4477-B878-C71AB5F5DB7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{07454B03-BFC2-4477-B878-C71AB5F5DB7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9E19894-3FF7-4B17-B726-068305A12B8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9E19894-3FF7-4B17-B726-068305A12B8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9E19894-3FF7-4B17-B726-068305A12B8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9E19894-3FF7-4B17-B726-068305A12B8C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

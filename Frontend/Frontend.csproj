@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- We use a placeholder target to make it a valid project for the IDE -->
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <!-- Ensure this project doesn't actually compile or produce output in standard builds -->
+    <IsPackable>false</IsPackable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <!-- This ensures all files in the directory are visible to the IDE -->
+    <Content Include="**\*" Exclude="node_modules\**;dist\**;.angular\**" />
+  </ItemGroup>
+</Project>
