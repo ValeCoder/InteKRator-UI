@@ -26,6 +26,8 @@ export class DatasetManagerComponent implements OnInit {
   versionNumber = '';
   versionNotes = '';
   selectedFile: File | null = null;
+  useFirstRowAsHeader = signal(true);
+  uploadColumns = signal<string[]>(['State1', 'State2', 'Action']); // Reusing logic but separate from manual grid
 
   ngOnInit() {
     this.loadDatasets();
@@ -99,6 +101,15 @@ export class DatasetManagerComponent implements OnInit {
     }
   }
 
+  addUploadColumn(name: string) {
+    if (!name) return;
+    this.uploadColumns.update(cols => [...cols, name]);
+  }
+
+  removeUploadColumn(index: number) {
+    this.uploadColumns.update(cols => cols.filter((_, i) => i !== index));
+  }
+
   uploadVersion() {
     const ds = this.selectedDataset();
     if (!ds || !this.selectedFile || !this.versionNumber) {
@@ -106,11 +117,19 @@ export class DatasetManagerComponent implements OnInit {
       return;
     }
 
+    // If manual columns enabled, check if we have columns
+    if (!this.useFirstRowAsHeader() && this.uploadColumns().length === 0) {
+      alert('Bitte definieren Sie mindestens eine Spalte.');
+      return;
+    }
+
     this.datasetService.uploadVersion(
       ds.id,
       this.versionNumber,
       this.versionNotes,
-      this.selectedFile
+      this.selectedFile,
+      this.useFirstRowAsHeader(),
+      this.useFirstRowAsHeader() ? undefined : this.uploadColumns()
     ).subscribe({
       next: (version) => {
         alert(`Version ${version.versionNumber} erfolgreich hochgeladen.`);

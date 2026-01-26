@@ -41,12 +41,17 @@ export class DatasetService {
         });
     }
 
-    uploadVersion(datasetId: number, versionNumber: string, notes: string, file: File): Observable<DatasetVersion> {
+    uploadVersion(datasetId: number, versionNumber: string, notes: string, file: File, useFirstRowAsHeader: boolean, columns?: string[]): Observable<DatasetVersion> {
         const formData = new FormData();
         formData.append('datasetId', datasetId.toString());
         formData.append('versionNumber', versionNumber);
         formData.append('notes', notes);
         formData.append('file', file);
+        formData.append('useFirstRowAsHeader', useFirstRowAsHeader.toString());
+
+        if (columns && columns.length > 0) {
+            formData.append('manualColumns', columns.join(','));
+        }
 
         return this.http.post<DatasetVersion>(`${this.versionUrl}/upload`, formData);
     }

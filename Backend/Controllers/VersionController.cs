@@ -52,7 +52,9 @@ public class VersionController : ControllerBase
         [FromForm] int datasetId, 
         [FromForm] string versionNumber, 
         [FromForm] string notes, 
-        IFormFile file)
+        IFormFile file,
+        [FromForm] bool useFirstRowAsHeader = true,
+        [FromForm] string? manualColumns = null)
     {
         if (file == null || file.Length == 0)
         {
@@ -68,7 +70,7 @@ public class VersionController : ControllerBase
         using (var stream = file.OpenReadStream())
         {
             var createdVersion = await _versionService.UploadVersionAsync(
-                datasetId, versionNumber, notes, file.FileName, stream);
+                datasetId, versionNumber, notes, file.FileName, stream, useFirstRowAsHeader, manualColumns);
             return CreatedAtAction(nameof(GetVersion), new { id = createdVersion.Id }, createdVersion);
         }
     }
