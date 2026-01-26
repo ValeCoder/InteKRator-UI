@@ -55,17 +55,16 @@
                 <button class="tab-btn" [class.active]="viewMode() === 'history'" (click)="setViewMode('history')">
                     <lucide-icon name="history" class="icon-sm"></lucide-icon> Historie / Versionen
                 </button>
+                <button class="btn-secondary small" (click)="toggleManualMode()" *ngIf="viewMode() === 'new'">
+                    {{ isManualMode() ? 'Zu Datei-Upload wechseln' : 'Manuell im Grid erstellen' }}
+                </button>
             </div>
         </div>
 
         <div class="management-content">
             <!-- New Version Tab -->
             <div class="tab-content" *ngIf="viewMode() === 'new'">
-                <div class="section-actions">
-                    <button class="btn-secondary small" (click)="toggleManualMode()">
-                        {{ isManualMode() ? 'Zu Datei-Upload wechseln' : 'Manuell im Grid erstellen' }}
-                    </button>
-                </div>
+
 
                 <!-- File Upload Form -->
                 <div class="upload-form" *ngIf="!isManualMode()">
@@ -83,9 +82,10 @@
                             <input type="file" (change)="onFileSelected($event)" accept=".txt,.dat" #fileInput hidden>
                             <div class="drop-content" (click)="fileInput.click()">
                                 <lucide-icon name="upload" class="icon-xl"></lucide-icon>
-                                <p *ngIf="!selectedFile">Datei hier ablegen oder klicken zum Auswählen</p>
+                                <p *ngIf="!selectedFile" class="text-lg font-medium text-gray-200">Datei hier
+                                    ablegen oder klicken zum Auswählen</p>
                                 <p *ngIf="selectedFile" class="selected-file-name">{{ selectedFile.name }}</p>
-                                <span class="file-hint">.txt oder .dat Dateien</span>
+                                <span class="file-hint text-sm text-gray-500 mt-2">.txt oder .dat Dateien</span>
                             </div>
                         </div>
                     </div>
@@ -136,7 +136,7 @@
                                 <input *ngFor="let cell of row; let cIndex = index" [ngModel]="cell"
                                     (ngModelChange)="updateCell(rIndex, cIndex, $event)" class="grid-cell">
                                 <button class="delete-row" (click)="deleteRow(rIndex)">
-                                    <lucide-icon name="trash-2" class="icon-xs"></lucide-icon>
+                                    <lucide-icon name="trash-2" class="icon-sm"></lucide-icon>
                                 </button>
                             </ng-container>
 
@@ -146,9 +146,11 @@
                         </div>
                     </div>
 
-                    <button class="btn-primary full-width" (click)="saveManualVersion()" [disabled]="!versionNumber">
-                        Manuelle Version speichern
-                    </button>
+                    <div class="form-actions">
+                        <button class="btn-primary" (click)="saveManualVersion()" [disabled]="!versionNumber">
+                            Manuelle Version speichern
+                        </button>
+                    </div>
                 </div>
             </div>
 

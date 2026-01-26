@@ -122,9 +122,10 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: var(--spacing-xl);
-    /* Increased padding */
-    gap: var(--spacing-lg);
+    padding: 32px;
+    /* Increased padding to p-8 */
+    gap: 32px;
+    /* Increased gap for vertical rhythm */
     background: var(--bg-secondary);
     border-radius: var(--radius-md);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -204,7 +205,8 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    gap: 32px;
+    /* Consistent vertical gap */
     animation: fadeIn 0.3s ease;
 }
 
@@ -247,8 +249,8 @@
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    /* Breathing room */
+    gap: 12px;
+    /* Increased label-to-input gap */
 }
 
 .form-group label {
@@ -261,7 +263,8 @@
 .drag-drop-zone {
     border: 2px dashed rgba(255, 255, 255, 0.1);
     border-radius: var(--radius-md);
-    padding: var(--spacing-xl);
+    padding: 64px 0;
+    /* py-16 */
     text-align: center;
     cursor: pointer;
     transition: all var(--transition-fast);
@@ -286,6 +289,7 @@
     color: var(--accent-primary);
     font-weight: 600;
     font-size: 1.1rem;
+    margin-top: 8px;
 }
 
 .file-hint {
@@ -369,6 +373,9 @@
     font-size: 0.9rem;
     width: 100%;
     border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .grid-cell:focus {
@@ -508,8 +515,30 @@
 }
 
 .icon-xl {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     margin-bottom: var(--spacing-md);
-    opacity: 0.3;
+    opacity: 0.5;
+}
+
+.delete-row {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.delete-row:hover {
+    color: #ef4444;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
 }
