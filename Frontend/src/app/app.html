@@ -1,0 +1,29 @@
+<div class="app-container">
+  <nav class="sidebar">
+    <div class="logo">
+      <lucide-icon name="activity" class="logo-icon"></lucide-icon>
+      <h2>InteKRator</h2>
+    </div>
+
+    <div class="nav-links">
+      <a routerLink="/datasets" routerLinkActive="active" class="nav-item">
+        <lucide-icon name="file-spreadsheet" class="icon-md"></lucide-icon>
+        <span>Datensätze</span>
+      </a>
+      <a routerLink="/training" routerLinkActive="active" class="nav-item">
+        <lucide-icon name="layout-dashboard" class="icon-md"></lucide-icon>
+        <span>Training</span>
+      </a>
+      <a routerLink="/results" routerLinkActive="active" class="nav-item">
+        <lucide-icon name="bar-chart-3" class="icon-md"></lucide-icon>
+        <span>Ergebnisse</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="content-area">
+    <div class="content-card card">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

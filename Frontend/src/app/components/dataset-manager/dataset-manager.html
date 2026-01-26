@@ -1,0 +1,87 @@
+<div class="manager-layout">
+    <!-- List Section -->
+    <aside class="dataset-list card">
+        <div class="list-header">
+            <h3>Datensätze</h3>
+            <button class="btn-primary small" (click)="createNew()">
+                <lucide-icon name="plus" class="icon-sm"></lucide-icon> Neu
+            </button>
+        </div>
+
+        <div class="list-content">
+            <div *ngFor="let ds of datasets()" class="list-item" [class.active]="selectedDataset()?.id === ds.id"
+                (click)="selectDataset(ds)">
+                <div class="item-info">
+                    <span class="item-name">{{ ds.name }}</span>
+                    <span class="item-meta">v{{ ds.version }} • {{ ds.columns.length }} Spalten</span>
+                </div>
+                <span class="item-date">{{ ds.createdAt | date:'dd.MM.yyyy' }}</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Editor Section -->
+    <section class="dataset-editor card" *ngIf="selectedDataset(); else emptyState">
+        <div class="editor-header">
+            <div class="header-info">
+                <input class="title-input" [(ngModel)]="selectedDataset()!.name" placeholder="Name des Datensatzes">
+                <span class="version-badge">Version {{ selectedDataset()!.version }}</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn-secondary" (click)="duplicate()">
+                    <lucide-icon name="copy" class="icon-sm"></lucide-icon> Klonen
+                </button>
+                <button class="btn-primary" (click)="saveNewVersion()">
+                    <lucide-icon name="save" class="icon-sm"></lucide-icon> Version speichern
+                </button>
+            </div>
+        </div>
+
+        <div class="schema-config">
+            <label class="text-secondary">Spalten (Variablen):</label>
+            <div class="schema-chips">
+                <span *ngFor="let col of selectedDataset()!.columns; let i = index" class="chip">
+                    {{ col }} <lucide-icon name="x" class="remove icon-sm" (click)="removeColumn(i)"></lucide-icon>
+                </span>
+                <input #newColInput (keyup.enter)="addColumn(newColInput.value); newColInput.value=''"
+                    placeholder="+ Spalte hinzufügen" class="chip-input input-base">
+            </div>
+        </div>
+
+        <div class="data-grid-container">
+            <div class="data-grid"
+                [style.grid-template-columns]="'repeat(' + selectedDataset()!.columns.length + ', 1fr) 50px'">
+                <!-- Headers -->
+                <div class="grid-header" *ngFor="let col of selectedDataset()!.columns">{{ col }}</div>
+                <div class="grid-header"></div>
+
+                <!-- Rows -->
+                <ng-container *ngFor="let row of parsedData(); let rIndex = index">
+                    <input *ngFor="let cell of row; let cIndex = index" [ngModel]="cell"
+                        (ngModelChange)="updateCell(rIndex, cIndex, $event)" class="grid-cell">
+                    <button class="delete-row" (click)="deleteRow(rIndex)">
+                        <lucide-icon name="trash-2" class="icon-sm"></lucide-icon>
+                    </button>
+                </ng-container>
+
+                <!-- Add Row placeholder -->
+                <button class="add-row-btn" [style.grid-column]="'1 / -1'" (click)="addRow()">
+                    <lucide-icon name="plus" class="icon-sm"></lucide-icon> Zeile hinzufügen
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <ng-template #emptyState>
+        <div class="empty-state card">
+            <div class="empty-content">
+                <lucide-icon name="file-spreadsheet" class="icon-xl text-secondary"></lucide-icon>
+                <h3>Kein Datensatz ausgewählt</h3>
+                <p class="text-secondary">Wähle einen Datensatz aus oder erstelle einen neuen, um zu beginnen.</p>
+                <button class="btn-primary" (click)="createNew()">
+                    <lucide-icon name="plus" class="icon-md"></lucide-icon> Neuen Datensatz erstellen
+                </button>
+            </div>
+        </div>
+    </ng-template>
+</div>

@@ -1,0 +1,7 @@
+﻿services:
+  intekrator_ui:
+    image: intekrator_ui
+    build:
+      context: .
+      dockerfile: InteKRator_UI/Dockerfile
+

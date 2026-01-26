@@ -1,0 +1,117 @@
+<div class="dashboard-layout">
+    <!-- Configuration Panel -->
+    <section class="config-panel card">
+        <div class="panel-header">
+            <div class="header-main">
+                <h3>Konfiguration</h3>
+                <p class="subtitle text-secondary">Parameter für den Lernprozess festlegen</p>
+            </div>
+            <lucide-icon name="layout-dashboard" class="text-secondary icon-lg"></lucide-icon>
+        </div>
+
+        <div class="config-form">
+            <div class="form-section">
+                <label class="section-label">Datenquelle</label>
+                <select class="select-input input-base" [ngModel]="selectedDatasetId()"
+                    (ngModelChange)="selectedDatasetId.set($event)">
+                    <option value="" disabled selected>Wähle einen Datensatz...</option>
+                    <option *ngFor="let ds of datasets()" [value]="ds.id">
+                        {{ ds.name }} (v{{ ds.version }})
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-section">
+                <label class="section-label">Lern-Optionen</label>
+
+                <div class="option-grid">
+                    <!-- Top -->
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" [(ngModel)]="config().top">
+                        <span class="checkbox-custom"></span>
+                        <span class="label-text">Top-Level Regel erzwingen</span>
+                    </label>
+
+                    <!-- All -->
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" [(ngModel)]="config().all">
+                        <span class="checkbox-custom"></span>
+                        <span class="label-text">Alle Regeln lernen</span>
+                    </label>
+
+                    <!-- Discretize -->
+                    <div class="param-group">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" [(ngModel)]="config().discretize">
+                            <span class="checkbox-custom"></span>
+                            <span class="label-text">Diskretisierung</span>
+                        </label>
+                        <input *ngIf="config().discretize" [(ngModel)]="config().discretizeParams"
+                            placeholder="z.B. 5 oder Namen..." class="param-input input-base">
+                    </div>
+
+                    <!-- Preselect -->
+                    <div class="param-group">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" [(ngModel)]="config().preselect">
+                            <span class="checkbox-custom"></span>
+                            <span class="label-text">Sensoren vorselektieren</span>
+                        </label>
+                        <input type="number" *ngIf="config().preselect" [(ngModel)]="config().preselectN"
+                            placeholder="N (optional)" class="param-input input-base">
+                    </div>
+
+                    <!-- Sample -->
+                    <div class="param-group">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" [(ngModel)]="config().sample">
+                            <span class="checkbox-custom"></span>
+                            <span class="label-text">Stichprobe (Sampling)</span>
+                        </label>
+                        <input *ngIf="config().sample" [(ngModel)]="config().sampleN" placeholder="N oder N%"
+                            class="param-input input-base">
+                    </div>
+
+                    <div class="param-group">
+                        <label class="label-text" style="font-size: 0.875rem; margin-top: 4px;">Suffix vermeiden
+                            (Optional)</label>
+                        <input [(ngModel)]="config().avoid" placeholder="z.B. MISSING" class="param-input input-base">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-footer">
+            <button class="btn-primary full-width" [disabled]="isTraining() || !selectedDatasetId()"
+                (click)="startTraining()">
+                <lucide-icon [name]="isTraining() ? 'activity' : 'play'" class="icon-sm"></lucide-icon>
+                <span *ngIf="!isTraining()">Training starten</span>
+                <span *ngIf="isTraining()">Training läuft...</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Output Panel -->
+    <section class="output-panel card">
+        <div class="panel-header">
+            <h3>Konsolen-Ausgang</h3>
+            <div class="status-badge" [class.running]="isTraining()">
+                <lucide-icon [name]="isTraining() ? 'activity' : 'check'" class="icon-xs"></lucide-icon>
+                {{ isTraining() ? 'LÄUFT' : 'BEREIT' }}
+            </div>
+        </div>
+
+        <div class="console-window">
+            <div class="log-line" *ngFor="let log of logs()">
+                <span class="timestamp">{{ '' | date:'HH:mm:ss' }}</span>
+                <span class="message">{{ log }}</span>
+            </div>
+            <div *ngIf="isTraining()" class="log-line typing">
+                <span class="cursor">|</span>
+            </div>
+            <div *ngIf="logs().length === 0" class="empty-log text-secondary">
+                Bereit für den Start...
+            </div>
+        </div>
+    </section>
+</div>

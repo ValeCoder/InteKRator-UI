@@ -1,0 +1,81 @@
+<div class="results-layout">
+    <!-- Input Panel -->
+    <section class="input-panel card">
+        <div class="panel-header">
+            <div class="header-main">
+                <h3>Entscheidung erklären</h3>
+                <p class="subtitle text-secondary">Parameter eingeben, um den Entscheidungspfad zu sehen</p>
+            </div>
+            <lucide-icon name="info" class="text-secondary icon-lg"></lucide-icon>
+        </div>
+
+        <div class="input-form">
+            <div class="form-section">
+                <label class="section-label">Datensatz / Modell</label>
+                <select class="select-input input-base" #dsSelect (change)="onSelectDataset(dsSelect.value)">
+                    <option value="" disabled selected>Modell wählen...</option>
+                    <option *ngFor="let ds of datasets()" [value]="ds.id">
+                        {{ ds.name }} (v{{ ds.version }})
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-section" *ngIf="selectedDataset()">
+                <label class="section-label">Zustandsparameter</label>
+                <div class="inputs-grid">
+                    <div class="input-group" *ngFor="let col of selectedDataset()!.columns.slice(0, -1); let i = index">
+                        <label>{{ col }}</label>
+                        <input [(ngModel)]="currentInputs[i]" class="param-input input-base"
+                            placeholder="Wert eingeben">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-primary full-width" (click)="runInference()" [disabled]="!selectedDataset()">
+                <lucide-icon name="search" class="icon-sm"></lucide-icon>
+                Entscheidung analysieren
+            </button>
+        </div>
+    </section>
+
+    <!-- Visualization Panel -->
+    <section class="viz-panel card">
+        <div class="panel-header">
+            <h3>Entscheidungsbaum-Visualisierung</h3>
+        </div>
+
+        <div class="viz-container">
+            <div *ngIf="!resultTree()" class="empty-viz">
+                <p class="text-secondary">Werte eingeben und Analyse starten, um den Pfad zu sehen.</p>
+            </div>
+
+            <div *ngIf="resultTree()" class="tree-wrapper">
+                <ng-container *ngTemplateOutlet="nodeTpl; context: {$implicit: resultTree()!}"></ng-container>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Recursive Node Template -->
+<ng-template #nodeTpl let-node>
+    <div class="tree-node-wrapper" [class.root-node]="node.type === 'action'">
+        <div class="tree-node" [ngClass]="node.type">
+            <div class="node-icon">
+                <lucide-icon *ngIf="node.type === 'action'" name="target" class="icon-sm"></lucide-icon>
+                <lucide-icon *ngIf="node.type === 'rule'" name="scroll-text" class="icon-sm"></lucide-icon>
+                <lucide-icon *ngIf="node.type === 'condition'" name="binary" class="icon-sm"></lucide-icon>
+            </div>
+            <div class="node-label">{{ node.label }}</div>
+        </div>
+
+        <div class="node-children" *ngIf="node.children && node.children.length > 0">
+            <div class="connector-line"></div>
+            <div class="children-wrapper">
+                <div class="child-branch" *ngFor="let child of node.children">
+                    <div class="connector-elbow"></div>
+                    <ng-container *ngTemplateOutlet="nodeTpl; context: {$implicit: child}"></ng-container>
+                </div>
+            </div>
+        </div>
+    </div>
+</ng-template>

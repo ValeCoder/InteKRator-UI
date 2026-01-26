@@ -1,0 +1,158 @@
+.results-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: var(--spacing-lg);
+    height: 100%;
+}
+
+.input-panel,
+.viz-panel {
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-lg);
+    gap: var(--spacing-lg);
+}
+
+.subtitle {
+    margin-top: 4px;
+}
+
+.input-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    flex: 1;
+}
+
+.inputs-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    max-height: 450px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+}
+
+/* Visualization */
+.viz-container {
+    flex: 1;
+    background-color: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.empty-viz {
+    align-self: center;
+    text-align: center;
+    opacity: 0.5;
+}
+
+/* Tree Styling */
+.tree-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tree-node-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.tree-node {
+    background-color: var(--bg-tertiary);
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 160px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tree-node.action {
+    background-color: var(--accent-primary);
+    color: #fff;
+    border: none;
+    font-weight: 700;
+}
+
+.tree-node.rule {
+    background-color: var(--bg-secondary);
+    border-color: var(--accent-glow);
+}
+
+.tree-node.condition {
+    background-color: var(--bg-primary);
+    font-size: 0.875rem;
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.node-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.9;
+}
+
+.node-label {
+    white-space: nowrap;
+}
+
+.node-children {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.children-wrapper {
+    display: flex;
+    gap: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+}
+
+.connector-line {
+    width: 2px;
+    height: 24px;
+    background-color: var(--accent-glow);
+}
+
+.child-branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.child-branch::before {
+    content: '';
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    width: 2px;
+    height: 24px;
+    background-color: var(--accent-glow);
+}
