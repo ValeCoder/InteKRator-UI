@@ -33,6 +33,23 @@ public class VersionService : IVersionService
         return version;
     }
 
+    public async Task<DatasetVersion> CreateManualVersionAsync(int datasetId, string versionNumber, string notes, List<string> columns, string content)
+    {
+        var version = new DatasetVersion
+        {
+            DatasetId = datasetId,
+            VersionNumber = versionNumber,
+            Notes = notes,
+            Columns = string.Join(",", columns),
+            Content = content,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.DatasetVersions.Add(version);
+        await _context.SaveChangesAsync();
+        return version;
+    }
+
     public async Task<DatasetVersion> UploadVersionAsync(int datasetId, string versionNumber, string notes, string fileName, Stream fileStream)
     {
         var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");

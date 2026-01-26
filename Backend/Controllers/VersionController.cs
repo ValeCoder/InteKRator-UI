@@ -37,6 +37,16 @@ public class VersionController : ControllerBase
         return CreatedAtAction(nameof(GetVersion), new { id = createdVersion.Id }, createdVersion);
     }
 
+    public record CreateManualVersionRequest(int DatasetId, string VersionNumber, string Notes, List<string> Columns, string Content);
+
+    [HttpPost("manual")]
+    public async Task<ActionResult<DatasetVersion>> CreateManualVersion(CreateManualVersionRequest request)
+    {
+        var createdVersion = await _versionService.CreateManualVersionAsync(
+            request.DatasetId, request.VersionNumber, request.Notes, request.Columns, request.Content);
+        return CreatedAtAction(nameof(GetVersion), new { id = createdVersion.Id }, createdVersion);
+    }
+
     [HttpPost("upload")]
     public async Task<ActionResult<DatasetVersion>> UploadVersion(
         [FromForm] int datasetId, 

@@ -13,9 +13,13 @@
                 (click)="selectDataset(ds)">
                 <div class="item-info">
                     <span class="item-name">{{ ds.name }}</span>
-                    <span class="item-meta">v{{ ds.version }} • {{ ds.columns.length }} Spalten</span>
+                    <span class="item-meta">{{ ds.versions.length }} Versionen</span>
                 </div>
-                <span class="item-date">{{ ds.createdAt | date:'dd.MM.yyyy' }}</span>
+                <div class="item-actions">
+                    <button class="btn-icon text-danger" (click)="deleteDataset(ds); $event.stopPropagation()">
+                        <lucide-icon name="trash-2" class="icon-sm"></lucide-icon>
+                    </button>
+                </div>
             </div>
         </div>
     </aside>
@@ -25,49 +29,106 @@
         <div class="editor-header">
             <div class="header-info">
                 <input class="title-input" [(ngModel)]="selectedDataset()!.name" placeholder="Name des Datensatzes">
-                <span class="version-badge">Version {{ selectedDataset()!.version }}</span>
-            </div>
-            <div class="header-actions">
-                <button class="btn-secondary" (click)="duplicate()">
-                    <lucide-icon name="copy" class="icon-sm"></lucide-icon> Klonen
-                </button>
-                <button class="btn-primary" (click)="saveNewVersion()">
-                    <lucide-icon name="save" class="icon-sm"></lucide-icon> Version speichern
-                </button>
             </div>
         </div>
 
-        <div class="schema-config">
-            <label class="text-secondary">Spalten (Variablen):</label>
-            <div class="schema-chips">
-                <span *ngFor="let col of selectedDataset()!.columns; let i = index" class="chip">
-                    {{ col }} <lucide-icon name="x" class="remove icon-sm" (click)="removeColumn(i)"></lucide-icon>
-                </span>
-                <input #newColInput (keyup.enter)="addColumn(newColInput.value); newColInput.value=''"
-                    placeholder="+ Spalte hinzufügen" class="chip-input input-base">
-            </div>
-        </div>
-
-        <div class="data-grid-container">
-            <div class="data-grid"
-                [style.grid-template-columns]="'repeat(' + selectedDataset()!.columns.length + ', 1fr) 50px'">
-                <!-- Headers -->
-                <div class="grid-header" *ngFor="let col of selectedDataset()!.columns">{{ col }}</div>
-                <div class="grid-header"></div>
-
-                <!-- Rows -->
-                <ng-container *ngFor="let row of parsedData(); let rIndex = index">
-                    <input *ngFor="let cell of row; let cIndex = index" [ngModel]="cell"
-                        (ngModelChange)="updateCell(rIndex, cIndex, $event)" class="grid-cell">
-                    <button class="delete-row" (click)="deleteRow(rIndex)">
-                        <lucide-icon name="trash-2" class="icon-sm"></lucide-icon>
+        <div class="management-grid">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="section-title-row">
+                    <h4><lucide-icon name="upload" class="icon-sm"></lucide-icon> Neue Version</h4>
+                    <button class="btn-secondary small" (click)="toggleManualMode()">
+                        {{ isManualMode() ? 'Zu Datei-Upload wechseln' : 'Manuell im Grid erstellen' }}
                     </button>
-                </ng-container>
+                </div>
 
-                <!-- Add Row placeholder -->
-                <button class="add-row-btn" [style.grid-column]="'1 / -1'" (click)="addRow()">
-                    <lucide-icon name="plus" class="icon-sm"></lucide-icon> Zeile hinzufügen
-                </button>
+                <!-- File Upload Form -->
+                <div class="upload-form" *ngIf="!isManualMode()">
+                    <div class="form-group">
+                        <label>Versionsnummer *</label>
+                        <input type="text" [(ngModel)]="versionNumber" placeholder="z.B. 1.0.1" class="input-base">
+                    </div>
+                    <div class="form-group">
+                        <label>Notizen</label>
+                        <textarea [(ngModel)]="versionNotes" placeholder="Was hat sich geändert?"
+                            class="input-base"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Datei (.txt, .dat) *</label>
+                        <input type="file" (change)="onFileSelected($event)" accept=".txt,.dat" class="input-base">
+                    </div>
+                    <button class="btn-primary" (click)="uploadVersion()" [disabled]="!selectedFile || !versionNumber">
+                        Hochladen
+                    </button>
+                </div>
+
+                <!-- Manual Grid Editor -->
+                <div class="manual-editor" *ngIf="isManualMode()">
+                    <div class="form-group">
+                        <label>Versionsnummer *</label>
+                        <input type="text" [(ngModel)]="versionNumber" placeholder="z.B. 1.0.1" class="input-base">
+                    </div>
+
+                    <div class="schema-config">
+                        <label class="text-secondary">Spalten:</label>
+                        <div class="schema-chips">
+                            <span *ngFor="let col of manualColumns(); let i = index" class="chip">
+                                {{ col }} <lucide-icon name="x" class="remove icon-xs"
+                                    (click)="removeColumn(i)"></lucide-icon>
+                            </span>
+                            <input #newColInput (keyup.enter)="addColumn(newColInput.value); newColInput.value=''"
+                                placeholder="+ Spalte" class="chip-input input-base">
+                        </div>
+                    </div>
+
+                    <div class="data-grid-container-mini">
+                        <div class="data-grid"
+                            [style.grid-template-columns]="'repeat(' + manualColumns().length + ', 1fr) 40px'">
+                            <!-- Headers -->
+                            <div class="grid-header" *ngFor="let col of manualColumns()">{{ col }}</div>
+                            <div class="grid-header"></div>
+
+                            <!-- Rows -->
+                            <ng-container *ngFor="let row of manualGrid(); let rIndex = index">
+                                <input *ngFor="let cell of row; let cIndex = index" [ngModel]="cell"
+                                    (ngModelChange)="updateCell(rIndex, cIndex, $event)" class="grid-cell">
+                                <button class="delete-row" (click)="deleteRow(rIndex)">
+                                    <lucide-icon name="trash-2" class="icon-xs"></lucide-icon>
+                                </button>
+                            </ng-container>
+
+                            <button class="add-row-btn" [style.grid-column]="'1 / -1'" (click)="addRow()">
+                                <lucide-icon name="plus" class="icon-xs"></lucide-icon> Zeile hinzufügen
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary full-width" (click)="saveManualVersion()" [disabled]="!versionNumber">
+                        Manuelle Version speichern
+                    </button>
+                </div>
+            </div>
+
+            <!-- Version History -->
+            <div class="history-section">
+                <h4><lucide-icon name="history" class="icon-sm"></lucide-icon> Versionen</h4>
+                <div class="version-list">
+                    <div *ngFor="let v of selectedDataset()?.versions" class="version-item">
+                        <div class="version-info">
+                            <span class="v-number">v{{ v.versionNumber }}</span>
+                            <span class="v-date">{{ v.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                            <p class="v-notes" *ngIf="v.notes">{{ v.notes }}</p>
+                        </div>
+                        <div class="v-actions">
+                            <button class="btn-icon text-danger" (click)="deleteVersion(v)">
+                                <lucide-icon name="trash-2" class="icon-sm"></lucide-icon>
+                            </button>
+                        </div>
+                    </div>
+                    <div *ngIf="selectedDataset()?.versions?.length === 0" class="empty-mini">
+                        Keine Versionen vorhanden.
+                    </div>
+                </div>
             </div>
         </div>
     </section>

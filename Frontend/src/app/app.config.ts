@@ -18,7 +18,9 @@ import {
   Activity,
   Target,
   ScrollText,
-  Binary
+  Binary,
+  Upload,
+  History
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -44,7 +46,9 @@ export const appConfig: ApplicationConfig = {
       Activity,
       Target,
       ScrollText,
-      Binary
+      Binary,
+      Upload,
+      History
     }))
   ]
 };

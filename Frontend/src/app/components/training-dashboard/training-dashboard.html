@@ -16,7 +16,7 @@
                     (ngModelChange)="selectedDatasetId.set($event)">
                     <option value="" disabled selected>Wähle einen Datensatz...</option>
                     <option *ngFor="let ds of datasets()" [value]="ds.id">
-                        {{ ds.name }} (v{{ ds.version }})
+                        {{ ds.name }} ({{ ds.versions.length }} Versionen)
                     </option>
                 </select>
             </div>

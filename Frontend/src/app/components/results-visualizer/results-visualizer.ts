@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, Search, BarChart3, Target, ScrollText, Binary, X, Info } from 'lucide-angular';
 import { Dataset } from '../../models/dataset.model';
+import { DatasetService } from '../../services/dataset.service';
 
 interface InferenceNode {
   type: 'action' | 'rule' | 'condition';
@@ -17,30 +18,28 @@ interface InferenceNode {
   templateUrl: './results-visualizer.html',
   styleUrl: './results-visualizer.css',
 })
-export class ResultsVisualizerComponent {
-  datasets = signal<Dataset[]>([
-    {
-      id: '1',
-      name: 'Grid Welt',
-      version: 1,
-      createdAt: '',
-      description: '',
-      columns: ['X', 'Y', 'Hindernis', 'Aktion'],
-      content: ''
-    }
-  ]);
+export class ResultsVisualizerComponent implements OnInit {
+  private datasetService = inject(DatasetService);
 
+  datasets = signal<Dataset[]>([]);
   selectedDataset = signal<Dataset | null>(null);
   currentInputs: string[] = [];
 
   resultTree = signal<InferenceNode | null>(null);
 
+  ngOnInit() {
+    this.datasetService.getDatasets().subscribe(data => {
+      this.datasets.set(data);
+    });
+  }
+
   onSelectDataset(dsId: string) {
-    const ds = this.datasets().find(d => d.id === dsId);
+    const id = parseInt(dsId, 10);
+    const ds = this.datasets().find(d => d.id === id);
     if (ds) {
       this.selectedDataset.set(ds);
       // Initialize inputs (excluding last column Action)
-      const inputCols = ds.columns.slice(0, -1);
+      const inputCols = (ds.columns || []).slice(0, -1);
       this.currentInputs = new Array(inputCols.length).fill('');
       this.resultTree.set(null);
     }

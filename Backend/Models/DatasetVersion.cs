@@ -15,6 +15,10 @@ public class DatasetVersion
 
     public string FilePath { get; set; } = string.Empty;
 
+    public string Columns { get; set; } = string.Empty; // Comma-separated or JSON list
+
+    public string Content { get; set; } = string.Empty; // Raw text data
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public int DatasetId { get; set; }

@@ -66,6 +66,123 @@
     display: block;
 }
 
+.section-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.manual-editor {
+    background: rgba(0, 0, 0, 0.2);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.data-grid-container-mini {
+    max-height: 300px;
+    overflow: auto;
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.data-grid {
+    display: grid;
+    gap: 1px;
+}
+
+.grid-header {
+    background: var(--bg-tertiary);
+    padding: 8px;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.grid-cell {
+    background-color: var(--bg-secondary);
+    border: none;
+    padding: 6px;
+    color: var(--text-primary);
+    text-align: center;
+    font-size: 0.8rem;
+    width: 100%;
+}
+
+.grid-cell:focus {
+    background-color: rgba(16, 185, 129, 0.05);
+    box-shadow: inset 0 0 0 1px var(--accent-primary);
+    outline: none;
+}
+
+.delete-row {
+    background: var(--bg-secondary);
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+}
+
+.add-row-btn {
+    background: transparent;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    padding: 0.5rem;
+    cursor: pointer;
+    margin: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+}
+
+.schema-config {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.schema-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+}
+
+.chip {
+    background: var(--accent-soft);
+    color: var(--accent-primary);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chip-input {
+    width: 120px;
+    font-size: 0.75rem;
+}
+
+.icon-xs {
+    width: 14px;
+    height: 14px;
+}
+
 /* Editor */
 .dataset-editor {
     flex: 1;
@@ -138,124 +255,112 @@
     background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Schema */
-.schema-config {
+.management-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+    flex: 1;
+    min-height: 0;
+}
+
+.upload-section,
+.history-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    min-height: 0;
+}
+
+.upload-section h4,
+.history-section h4 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.upload-form {
+    background: rgba(0, 0, 0, 0.2);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.form-group label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.version-list {
+    flex: 1;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
-}
-
-.schema-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-xs);
-}
-
-.chip {
-    background: var(--accent-soft);
-    color: var(--accent-primary);
-    padding: 4px 10px;
-    border-radius: var(--radius-sm);
-    font-size: 0.875rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-}
-
-.remove {
-    cursor: pointer;
-    opacity: 0.6;
-}
-
-.remove:hover {
-    opacity: 1;
-}
-
-.chip-input {
-    width: 180px;
-    font-size: 0.875rem;
-}
-
-/* Data Grid */
-.data-grid-container {
-    flex: 1;
-    overflow: auto;
-    border-radius: var(--radius-sm);
     background: rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
 }
 
-.data-grid {
-    display: grid;
-    gap: 1px;
-}
-
-.grid-header {
-    background: var(--bg-tertiary);
-    padding: 12px;
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary);
-    text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.grid-cell {
-    background-color: var(--bg-secondary);
-    border: none;
-    padding: 10px;
-    color: var(--text-primary);
-    text-align: center;
-    font-size: 0.875rem;
-}
-
-.grid-cell:focus {
-    background-color: rgba(16, 185, 129, 0.05);
-    box-shadow: inset 0 0 0 1px var(--accent-primary);
-    outline: none;
-}
-
-.delete-row {
-    background: var(--bg-secondary);
-    border: none;
-    color: #ef4444;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-}
-
-.delete-row:hover {
-    opacity: 1;
-    background: rgba(239, 68, 68, 0.1);
-}
-
-.add-row-btn {
-    background: transparent;
-    border: 1px dashed rgba(255, 255, 255, 0.1);
-    color: var(--text-secondary);
-    padding: 1rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+.version-item {
+    background: rgba(255, 255, 255, 0.03);
+    padding: var(--spacing-md);
     border-radius: var(--radius-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.add-row-btn:hover {
-    border-color: var(--accent-primary);
+.v-number {
+    font-weight: 700;
     color: var(--accent-primary);
-    background: var(--accent-soft);
+    margin-right: 12px;
+}
+
+.v-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.v-notes {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 8px 0 0 0;
+}
+
+.empty-mini {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 2rem;
+    font-style: italic;
+}
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.btn-icon:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.text-danger {
+    color: #ef4444;
 }
 
 /* Empty State */

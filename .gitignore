@@ -32,3 +32,7 @@ yarn-error.log
 # System Files
 .DS_Store
 Thumbs.db
+/Backend/datasets.db
+/Backend/datasets.db-shm
+/Backend/datasets.db-wal
+/Frontend/dist/intekrator-frontend/*

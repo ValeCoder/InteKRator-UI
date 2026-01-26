@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule, Play, LayoutDashboard, Database, Activity, Info } from 'lucide-angular';
 import { Dataset } from '../../models/dataset.model';
+import { DatasetService } from '../../services/dataset.service';
 
 interface TrainingConfig {
   top: boolean;
@@ -24,21 +25,11 @@ interface TrainingConfig {
   templateUrl: './training-dashboard.html',
   styleUrl: './training-dashboard.css',
 })
-export class TrainingDashboardComponent {
-  // Mock datasets (would share service in real app)
-  datasets = signal<Dataset[]>([
-    {
-      id: '1',
-      name: 'Grid Welt',
-      version: 1,
-      createdAt: '',
-      description: '',
-      columns: [],
-      content: ''
-    }
-  ]);
+export class TrainingDashboardComponent implements OnInit {
+  private datasetService = inject(DatasetService);
 
-  selectedDatasetId = signal<string>('');
+  datasets = signal<Dataset[]>([]);
+  selectedDatasetId = signal<number | null>(null);
 
   config = signal<TrainingConfig>({
     top: false,
@@ -56,6 +47,12 @@ export class TrainingDashboardComponent {
 
   isTraining = signal(false);
   logs = signal<string[]>([]);
+
+  ngOnInit() {
+    this.datasetService.getDatasets().subscribe(data => {
+      this.datasets.set(data);
+    });
+  }
 
   startTraining() {
     if (!this.selectedDatasetId()) {

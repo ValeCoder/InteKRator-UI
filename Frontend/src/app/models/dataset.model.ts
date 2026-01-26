@@ -1,15 +1,19 @@
 export interface Dataset {
-    id: string;
+    id: number;
     name: string;
-    version: number;
-    createdAt: string;
     description: string;
-    columns: string[]; // Names of the state variables and the action (last one)
-    content: string; // Raw text content "s1 s2 a\n..."
+    createdAt: string;
+    versions: DatasetVersion[];
+    columns?: string[]; // Keep for compatibility with existing components
 }
 
 export interface DatasetVersion {
-    version: number;
-    createdAt: string;
+    id: number;
+    versionNumber: string;
+    notes: string;
+    filePath: string;
+    columns: string[];
     content: string;
+    createdAt: string;
+    datasetId: number;
 }

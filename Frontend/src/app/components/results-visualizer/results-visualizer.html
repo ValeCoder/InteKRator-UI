@@ -15,7 +15,7 @@
                 <select class="select-input input-base" #dsSelect (change)="onSelectDataset(dsSelect.value)">
                     <option value="" disabled selected>Modell wählen...</option>
                     <option *ngFor="let ds of datasets()" [value]="ds.id">
-                        {{ ds.name }} (v{{ ds.version }})
+                        {{ ds.name }} ({{ ds.versions.length }} Versionen)
                     </option>
                 </select>
             </div>
@@ -23,7 +23,8 @@
             <div class="form-section" *ngIf="selectedDataset()">
                 <label class="section-label">Zustandsparameter</label>
                 <div class="inputs-grid">
-                    <div class="input-group" *ngFor="let col of selectedDataset()!.columns.slice(0, -1); let i = index">
+                    <div class="input-group"
+                        *ngFor="let col of (selectedDataset()?.columns || []).slice(0, -1); let i = index">
                         <label>{{ col }}</label>
                         <input [(ngModel)]="currentInputs[i]" class="param-input input-base"
                             placeholder="Wert eingeben">
