@@ -1,5 +1,34 @@
-bin/
-obj/
-/packages/
+## .NET
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+log/
+logs/
+*.user
+*.userosscache
+*.sln.docuser
+
+# Visual Studio / Rider
+.vs/
+.idea/
+.rider/
+*.suo
+*.user
+*.userosscache
+*.sln.docuser
 riderModule.iml
-/_ReSharper.Caches/
+_ReSharper.Caches/
+
+## Node / Angular
+node_modules/
+npm-debug.log
+yarn-error.log
+/dist/
+/tmp/
+/out-tsc/
+/bazel-out/
+/.angular/cache
+
+# System Files
+.DS_Store
+Thumbs.db
