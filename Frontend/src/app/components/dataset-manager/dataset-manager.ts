@@ -1,7 +1,7 @@
 import { Component, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Plus, Save, Copy, Trash2, FileSpreadsheet, Upload, History } from 'lucide-angular';
+import { LucideAngularModule, Plus, Save, Copy, Trash2, FileSpreadsheet, Upload, History, ChevronUp, ChevronDown } from 'lucide-angular';
 import { Dataset, DatasetVersion } from '../../models/dataset.model';
 import { DatasetService } from '../../services/dataset.service';
 
@@ -204,5 +204,34 @@ export class DatasetManagerComponent implements OnInit {
         if (ds) this.selectDataset(ds);
       });
     }
+  }
+
+  // Accordion Logic
+  expandedVersionId = signal<number | null>(null);
+
+  toggleVersion(versionId: number) {
+    this.expandedVersionId.update(current => current === versionId ? null : versionId);
+  }
+
+  getParsedContent(version: DatasetVersion): string[][] {
+    if (!version.content) return [];
+
+    // Split by newlines for rows
+    const rows = version.content.trim().split('\n');
+
+    // Split each row by spaces (handling multiple spaces if necessary)
+    return rows.map(row => row.trim().split(/\s+/));
+  }
+
+  getColumns(version: DatasetVersion): string[] {
+    if (Array.isArray(version.columns)) {
+      return version.columns;
+    }
+    // Fallback if columns is a string (e.g. "Col1, Col2")
+    if (typeof version.columns === 'string') {
+      const cols: string = version.columns;
+      return cols.split(',').map(c => c.trim());
+    }
+    return [];
   }
 }

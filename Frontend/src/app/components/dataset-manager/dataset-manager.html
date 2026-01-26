@@ -157,18 +157,44 @@
             <!-- Version History Tab -->
             <div class="tab-content" *ngIf="viewMode() === 'history'">
                 <div class="history-list">
-                    <div *ngFor="let v of selectedDataset()?.versions" class="version-item">
-                        <div class="version-info">
-                            <div class="v-header">
-                                <span class="v-number">v{{ v.versionNumber }}</span>
-                                <span class="v-date">{{ v.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                    <div *ngFor="let v of selectedDataset()?.versions" class="version-item"
+                        [class.expanded]="expandedVersionId() === v.id">
+                        <div class="version-header-row" (click)="toggleVersion(v.id)">
+                            <div class="version-info">
+                                <div class="v-header">
+                                    <span class="v-number">v{{ v.versionNumber }}</span>
+                                    <span class="v-date">{{ v.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+                                </div>
+                                <p class="v-notes" *ngIf="v.notes">{{ v.notes }}</p>
                             </div>
-                            <p class="v-notes" *ngIf="v.notes">{{ v.notes }}</p>
+                            <div class="v-actions">
+                                <lucide-icon [name]="expandedVersionId() === v.id ? 'chevron-up' : 'chevron-down'"
+                                    class="icon-sm text-secondary"></lucide-icon>
+                                <button class="btn-icon text-danger"
+                                    (click)="deleteVersion(v); $event.stopPropagation()">
+                                    <lucide-icon name="trash-2" class="icon-sm"></lucide-icon>
+                                </button>
+                            </div>
                         </div>
-                        <div class="v-actions">
-                            <button class="btn-icon text-danger" (click)="deleteVersion(v)">
-                                <lucide-icon name="trash-2" class="icon-sm"></lucide-icon>
-                            </button>
+
+                        <!-- Expanded Content -->
+                        <div class="version-details" *ngIf="expandedVersionId() === v.id"
+                            (click)="$event.stopPropagation()">
+                            <div class="data-view-controls">
+                                <span class="text-sm text-secondary">{{ getParsedContent(v).length }} Einträge</span>
+                            </div>
+                            <div class="data-grid-container-mini read-only">
+                                <div class="data-grid"
+                                    [style.grid-template-columns]="'repeat(' + getColumns(v).length + ', 1fr)'">
+                                    <div class="grid-header" *ngFor="let col of getColumns(v)">{{ col }}</div>
+
+                                    <ng-container *ngFor="let row of getParsedContent(v)">
+                                        <div class="grid-cell readonly-cell" *ngFor="let cell of row" title="{{cell}}">
+                                            {{ cell }}
+                                        </div>
+                                    </ng-container>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div *ngIf="selectedDataset()?.versions?.length === 0" class="empty-mini">

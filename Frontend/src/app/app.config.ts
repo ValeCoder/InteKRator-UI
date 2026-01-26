@@ -22,7 +22,9 @@ import {
   Upload,
   History,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-angular';
 
 
@@ -53,7 +55,9 @@ export const appConfig: ApplicationConfig = {
       Upload,
       History,
       ChevronLeft,
-      ChevronRight
+      ChevronRight,
+      ChevronUp,
+      ChevronDown
     }))
   ]
 };
