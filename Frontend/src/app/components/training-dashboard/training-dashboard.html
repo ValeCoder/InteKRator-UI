@@ -13,10 +13,20 @@
             <div class="form-section">
                 <label class="section-label">Datenquelle</label>
                 <select class="select-input input-base" [ngModel]="selectedDatasetId()"
-                    (ngModelChange)="selectedDatasetId.set($event)">
-                    <option value="" disabled selected>Wähle einen Datensatz...</option>
+                    (ngModelChange)="onDatasetChange($event)">
+                    <option value="" disabled [selected]="!selectedDatasetId()">Wähle einen Datensatz...</option>
                     <option *ngFor="let ds of datasets()" [value]="ds.id">
                         {{ ds.name }} ({{ ds.versions.length }} Versionen)
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-section" *ngIf="selectedDataset()">
+                <label class="section-label">Version</label>
+                <select class="select-input input-base" [ngModel]="selectedVersionId()"
+                    (ngModelChange)="selectedVersionId.set($event)">
+                    <option *ngFor="let v of selectedDataset()!.versions" [value]="v.id">
+                        {{ v.versionNumber }} ({{ v.createdAt | date:'shortDate' }})
                     </option>
                 </select>
             </div>
@@ -82,7 +92,7 @@
         </div>
 
         <div class="action-footer">
-            <button class="btn-primary full-width" [disabled]="isTraining() || !selectedDatasetId()"
+            <button class="btn-primary full-width" [disabled]="isTraining() || !selectedVersionId()"
                 (click)="startTraining()">
                 <lucide-icon [name]="isTraining() ? 'activity' : 'play'" class="icon-sm"></lucide-icon>
                 <span *ngIf="!isTraining()">Training starten</span>
