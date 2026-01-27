@@ -10,17 +10,45 @@
         </div>
 
         <div class="input-form">
-            <div class="form-section">
-                <label class="section-label">Datensatz / Modell</label>
-                <select class="select-input input-base" #dsSelect (change)="onSelectDataset(dsSelect.value)">
-                    <option value="" disabled selected>Modell wählen...</option>
-                    <option *ngFor="let ds of datasets()" [value]="ds.id">
-                        {{ ds.name }} ({{ ds.versions.length }} Versionen)
-                    </option>
-                </select>
+            <!-- Selectors Group -->
+            <div class="selectors-group">
+                <div class="form-section">
+                    <label class="section-label">Datensatz</label>
+                    <select class="select-input input-base" #dsSelect (change)="onSelectDataset(dsSelect.value)">
+                        <option value="" disabled [selected]="!selectedDataset()">Datensatz wählen...</option>
+                        <option *ngFor="let ds of datasets()" [value]="ds.id">
+                            {{ ds.name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-section" *ngIf="selectedDataset()">
+                    <label class="section-label">Version</label>
+                    <select class="select-input input-base" #verSelect (change)="onSelectVersion(verSelect.value)">
+                        <option value="" disabled [selected]="!selectedVersion()">Version wählen...</option>
+                        <option *ngFor="let v of selectedDataset()?.versions" [value]="v.id">
+                            Version {{ v.versionNumber }} ({{ v.createdAt | date:'shortDate' }})
+                        </option>
+                    </select>
+                </div>
             </div>
 
-            <div class="form-section" *ngIf="selectedDataset()">
+            <div *ngIf="isLoading()" class="loading-state">
+                <p>Lade Ergebnisse...</p>
+            </div>
+
+            <div *ngIf="hasNoTraining()" class="warning-box">
+                <div class="warning-icon">
+                    <lucide-icon name="info" class="icon-sm"></lucide-icon>
+                </div>
+                <div class="warning-content">
+                    <p class="warning-title">Kein Training vorhanden</p>
+                    <p class="warning-text">Für diese Version wurde noch kein Training durchgeführt. Bitte trainieren
+                        Sie das Modell zuerst.</p>
+                </div>
+            </div>
+
+            <div class="form-section" *ngIf="latestResult()">
                 <label class="section-label">Zustandsparameter</label>
                 <div class="inputs-grid">
                     <div class="input-group"
@@ -32,7 +60,7 @@
                 </div>
             </div>
 
-            <button class="btn-primary full-width" (click)="runInference()" [disabled]="!selectedDataset()">
+            <button class="btn-primary full-width" (click)="runInference()" [disabled]="!latestResult() || isLoading()">
                 <lucide-icon name="search" class="icon-sm"></lucide-icon>
                 Entscheidung analysieren
             </button>
@@ -43,11 +71,16 @@
     <section class="viz-panel card">
         <div class="panel-header">
             <h3>Entscheidungsbaum-Visualisierung</h3>
+            <span *ngIf="latestResult()" class="status-badge success">
+                Trainiert am {{ latestResult()?.createdAt | date:'short' }}
+            </span>
         </div>
 
         <div class="viz-container">
-            <div *ngIf="!resultTree()" class="empty-viz">
-                <p class="text-secondary">Werte eingeben und Analyse starten, um den Pfad zu sehen.</p>
+            <div *ngIf="!resultTree() && !isLoading()" class="empty-viz">
+                <p class="text-secondary" *ngIf="!hasNoTraining()">Werte eingeben und Analyse starten, um den Pfad zu
+                    sehen.</p>
+                <p class="text-secondary" *ngIf="hasNoTraining()">Kein Modell verfügbar.</p>
             </div>
 
             <div *ngIf="resultTree()" class="tree-wrapper">
