@@ -10,6 +10,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IDatasetService, DatasetService>();
 builder.Services.AddScoped<IVersionService, VersionService>();
+builder.Services.AddScoped<ITrainingService, TrainingService>();
+
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

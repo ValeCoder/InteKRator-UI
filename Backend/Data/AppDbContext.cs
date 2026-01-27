@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Dataset> Datasets { get; set; }
     public DbSet<DatasetVersion> DatasetVersions { get; set; }
+    public DbSet<TrainingResult> TrainingResults { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
