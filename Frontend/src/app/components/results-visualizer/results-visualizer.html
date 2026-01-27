@@ -10,7 +10,6 @@
         </div>
 
         <div class="input-form">
-            <!-- Selectors Group -->
             <div class="selectors-group">
                 <div class="form-section">
                     <label class="section-label">Datensatz</label>
@@ -43,8 +42,7 @@
                 </div>
                 <div class="warning-content">
                     <p class="warning-title">Kein Training vorhanden</p>
-                    <p class="warning-text">Für diese Version wurde noch kein Training durchgeführt. Bitte trainieren
-                        Sie das Modell zuerst.</p>
+                    <p class="warning-text">Für diese Version wurde noch kein Training durchgeführt.</p>
                 </div>
             </div>
 
@@ -68,48 +66,80 @@
     </section>
 
     <!-- Visualization Panel -->
-    <section class="viz-panel card">
+    <section class="viz-panel card" (scroll)="updateLines()">
         <div class="panel-header">
-            <h3>Entscheidungsbaum-Visualisierung</h3>
+            <h3>Regel-Visualisierung</h3>
             <span *ngIf="latestResult()" class="status-badge success">
-                Trainiert am {{ latestResult()?.createdAt | date:'short' }}
+                Modell trainiert am {{ latestResult()?.createdAt | date:'short' }}
             </span>
         </div>
 
         <div class="viz-container">
-            <div *ngIf="!resultTree() && !isLoading()" class="empty-viz">
-                <p class="text-secondary" *ngIf="!hasNoTraining()">Werte eingeben und Analyse starten, um den Pfad zu
-                    sehen.</p>
+            <div *ngIf="outcomes().length === 0 && !isLoading()" class="empty-viz">
+                <p class="text-secondary" *ngIf="!hasNoTraining()">Keine Ergebnisse zum Anzeigen.</p>
                 <p class="text-secondary" *ngIf="hasNoTraining()">Kein Modell verfügbar.</p>
             </div>
 
-            <div *ngIf="resultTree()" class="tree-wrapper">
-                <ng-container *ngTemplateOutlet="nodeTpl; context: {$implicit: resultTree()!}"></ng-container>
+            <!-- SVG Overlay -->
+            <svg class="lines-overlay" [attr.width]="svgWidth" [attr.height]="svgHeight" *ngIf="outcomes().length > 0">
+                <path *ngFor="let line of connectionLines" [attr.d]="line.path" class="connection-path"
+                    [class.active]="line.active">
+                </path>
+            </svg>
+
+            <!-- Graph Layout -->
+            <div class="graph-layout" *ngIf="outcomes().length > 0">
+
+                <!-- Column 1: Outcomes -->
+                <div class="column col-outcomes">
+                    <div class="col-header">ERGEBNIS (OUTCOME)</div>
+                    <div class="nodes-stack">
+                        <div *ngFor="let outcome of outcomes()" class="node outcome-node" [id]="outcome.id"
+                            #nodeElement>
+                            <span class="outcome-label">{{ outcome.label }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Rules -->
+                <div class="column col-rules">
+                    <div class="col-header">REGELN</div>
+                    <div class="nodes-stack">
+                        <ng-container *ngFor="let outcome of outcomes()">
+                            <div *ngFor="let rule of outcome.children" class="node rule-node" [id]="rule.id"
+                                #nodeElement (mouseenter)="setActiveRule(rule.id)" (mouseleave)="setActiveRule(null)"
+                                [class.active]="activeRuleId === rule.id"
+                                [class.high-confidence]="(rule.confidence || 0) >= 0.95">
+
+                                <div class="rule-content">
+                                    <span class="rule-title">{{ rule.label }}</span>
+                                    <span class="conf-text">{{ (rule.confidence || 0) * 100 | number:'1.0-1' }}%</span>
+                                </div>
+                                <div class="conf-bar-bg">
+                                    <div class="conf-bar-fill" [style.width.%]="(rule.confidence || 0) * 100"></div>
+                                </div>
+                            </div>
+                        </ng-container>
+                    </div>
+                </div>
+
+                <!-- Column 3: Conditions -->
+                <div class="column col-conditions">
+                    <div class="col-header">BEDINGUNGEN</div>
+                    <div class="nodes-stack">
+                        <ng-container *ngFor="let outcome of outcomes()">
+                            <ng-container *ngFor="let rule of outcome.children">
+                                <div *ngFor="let cond of rule.children" class="node condition-node" [id]="cond.id"
+                                    #nodeElement [class.active]="activeRuleId === rule.id">
+                                    <lucide-icon name="binary" class="icon-xs"></lucide-icon>
+                                    <span>{{ cond.label }}</span>
+                                </div>
+                            </ng-container>
+                        </ng-container>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
 </div>
-
-<!-- Recursive Node Template -->
-<ng-template #nodeTpl let-node>
-    <div class="tree-node-wrapper" [class.root-node]="node.type === 'action'">
-        <div class="tree-node" [ngClass]="node.type">
-            <div class="node-icon">
-                <lucide-icon *ngIf="node.type === 'action'" name="target" class="icon-sm"></lucide-icon>
-                <lucide-icon *ngIf="node.type === 'rule'" name="scroll-text" class="icon-sm"></lucide-icon>
-                <lucide-icon *ngIf="node.type === 'condition'" name="binary" class="icon-sm"></lucide-icon>
-            </div>
-            <div class="node-label">{{ node.label }}</div>
-        </div>
-
-        <div class="node-children" *ngIf="node.children && node.children.length > 0">
-            <div class="connector-line"></div>
-            <div class="children-wrapper">
-                <div class="child-branch" *ngFor="let child of node.children">
-                    <div class="connector-elbow"></div>
-                    <ng-container *ngTemplateOutlet="nodeTpl; context: {$implicit: child}"></ng-container>
-                </div>
-            </div>
-        </div>
-    </div>
-</ng-template>
