@@ -50,6 +50,30 @@ public class VersionService : IVersionService
         return version;
     }
 
+    public async Task<DatasetVersion> CopyVersionAsync(int datasetId, string versionNumber, string notes, int sourceVersionId)
+    {
+        var sourceVersion = await _context.DatasetVersions.FindAsync(sourceVersionId);
+        if (sourceVersion == null)
+        {
+            throw new ArgumentException("Source version not found");
+        }
+
+        var version = new DatasetVersion
+        {
+            DatasetId = datasetId,
+            VersionNumber = versionNumber,
+            Notes = notes,
+            Columns = sourceVersion.Columns,
+            Content = sourceVersion.Content,
+            CreatedAt = DateTime.UtcNow
+            // FilePath is intentionally left null as we are creating a new logical version based on content
+        };
+
+        _context.DatasetVersions.Add(version);
+        await _context.SaveChangesAsync();
+        return version;
+    }
+
     public async Task<DatasetVersion> UploadVersionAsync(int datasetId, string versionNumber, string notes, string fileName, Stream fileStream, bool useFirstRowAsHeader = true, string? manualColumns = null)
     {
         var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");

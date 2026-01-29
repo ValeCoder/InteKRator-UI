@@ -8,6 +8,7 @@ public interface IVersionService
     Task<DatasetVersion?> GetVersionByIdAsync(int id);
     Task<DatasetVersion> CreateVersionAsync(DatasetVersion version);
     Task<DatasetVersion> CreateManualVersionAsync(int datasetId, string versionNumber, string notes, List<string> columns, string content);
+    Task<DatasetVersion> CopyVersionAsync(int datasetId, string versionNumber, string notes, int sourceVersionId);
     Task<DatasetVersion> UploadVersionAsync(int datasetId, string versionNumber, string notes, string fileName, Stream fileStream, bool useFirstRowAsHeader = true, string? manualColumns = null);
     Task<bool> DeleteVersionAsync(int id);
 }

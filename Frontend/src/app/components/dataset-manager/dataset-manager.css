@@ -194,6 +194,37 @@
     font-weight: 600;
 }
 
+/* Sub Navigation */
+.sub-navigation {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: var(--spacing-sm);
+}
+
+.sub-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
+}
+
+.sub-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.sub-tab.active {
+    color: var(--accent-primary);
+    background: rgba(16, 185, 129, 0.1);
+    font-weight: 500;
+}
+
 .management-content {
     flex: 1;
     display: flex;

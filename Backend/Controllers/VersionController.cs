@@ -47,6 +47,22 @@ public class VersionController : ControllerBase
         return CreatedAtAction(nameof(GetVersion), new { id = createdVersion.Id }, createdVersion);
     }
 
+    public record CopyVersionRequest(int DatasetId, string VersionNumber, string Notes, int SourceVersionId);
+
+    [HttpPost("copy")]
+    public async Task<ActionResult<DatasetVersion>> CopyVersion(CopyVersionRequest request)
+    {
+        try 
+        {
+            var createdVersion = await _versionService.CopyVersionAsync(
+                request.DatasetId, request.VersionNumber, request.Notes, request.SourceVersionId);
+            return CreatedAtAction(nameof(GetVersion), new { id = createdVersion.Id }, createdVersion);
+        }
+        catch (ArgumentException ex) {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [HttpPost("upload")]
     public async Task<ActionResult<DatasetVersion>> UploadVersion(
         [FromForm] int datasetId, 

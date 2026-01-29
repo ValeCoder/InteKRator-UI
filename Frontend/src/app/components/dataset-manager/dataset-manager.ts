@@ -22,6 +22,9 @@ export class DatasetManagerComponent implements OnInit {
   viewMode = signal<'new' | 'history'>('new');
   isSidebarCollapsed = signal(false);
 
+  // Creation State
+  creationSource = signal<'upload' | 'manual' | 'copy'>('upload');
+
   // Upload Form
   versionNumber = '';
   versionNotes = '';
@@ -57,6 +60,47 @@ export class DatasetManagerComponent implements OnInit {
       this.loadDatasets();
       this.selectDataset(newDs);
     });
+  }
+
+  setCreationSource(source: 'upload' | 'manual' | 'copy') {
+    this.creationSource.set(source);
+  }
+
+  // Copy from Version
+  sourceVersionId = signal<number | null>(null);
+
+  createFromVersion() {
+    const ds = this.selectedDataset();
+    const sourceId = this.sourceVersionId();
+
+    if (!ds || !sourceId) {
+      alert('Bitte eine Quell-Version wählen.');
+      return;
+    }
+
+    // Find the source version object
+    const sourceVersion = ds.versions.find(v => v.id === sourceId);
+    if (!sourceVersion) {
+      alert('Version nicht gefunden.');
+      return;
+    }
+
+    // Parse content to grid
+    const grid = this.getParsedContent(sourceVersion);
+    const cols = this.getColumns(sourceVersion);
+
+    if (grid.length === 0 || cols.length === 0) {
+      alert('Die gewählte Version hat keinen gültigen Inhalt.');
+      return;
+    }
+
+    // Switch to manual mode with pre-filled data
+    this.manualColumns.set(cols);
+    this.manualGrid.set(grid);
+
+    // Switch to manual mode
+    this.creationSource.set('manual');
+    alert('Daten wurden in den Editor geladen. Sie können diese nun bearbeiten und speichern.');
   }
 
   onFileSelected(event: any) {
@@ -154,12 +198,18 @@ export class DatasetManagerComponent implements OnInit {
   }
 
   // Manual Grid Mode
-  isManualMode = signal(false);
+  // isManualMode deprecated in favor of creationSource, but keeping for compatibility if referenced elsewhere. 
+  // Actually, let's remove references to isManualMode logic and rely on creationSource.
+  // But wait, the template uses isManualMode(). Let's map it.
+  isManualMode() { return this.creationSource() === 'manual'; }
+
   manualColumns = signal<string[]>(['State1', 'State2', 'Action']);
   manualGrid = signal<string[][]>([['0', '0', '0']]);
 
   toggleManualMode() {
-    this.isManualMode.update(v => !v);
+    // Legacy support or remove? We will update template to use setCreationSource.
+    if (this.creationSource() === 'manual') this.creationSource.set('upload');
+    else this.creationSource.set('manual');
   }
 
   addColumn(name: string) {
@@ -209,7 +259,7 @@ export class DatasetManagerComponent implements OnInit {
         alert(`Manuelle Version ${version.versionNumber} erstellt.`);
         this.versionNumber = '';
         this.versionNotes = '';
-        this.isManualMode.set(false);
+        this.creationSource.set('upload'); // Reset
         this.selectDataset(ds);
       },
       error: (err) => alert('Fehler: ' + err.error)

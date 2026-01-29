@@ -55,9 +55,6 @@
                 <button class="tab-btn" [class.active]="viewMode() === 'history'" (click)="setViewMode('history')">
                     <lucide-icon name="history" class="icon-sm"></lucide-icon> Historie / Versionen
                 </button>
-                <button class="btn-secondary small" (click)="toggleManualMode()" *ngIf="viewMode() === 'new'">
-                    {{ isManualMode() ? 'Zu Datei-Upload wechseln' : 'Manuell im Grid erstellen' }}
-                </button>
             </div>
         </div>
 
@@ -65,9 +62,17 @@
             <!-- New Version Tab -->
             <div class="tab-content" *ngIf="viewMode() === 'new'">
 
+                <div class="sub-navigation">
+                    <button class="sub-tab" [class.active]="creationSource() === 'upload'"
+                        (click)="setCreationSource('upload')">Datei Upload</button>
+                    <button class="sub-tab" [class.active]="creationSource() === 'manual'"
+                        (click)="setCreationSource('manual')">Manuell Erstellen</button>
+                    <button class="sub-tab" [class.active]="creationSource() === 'copy'"
+                        (click)="setCreationSource('copy')">Aus Version kopieren</button>
+                </div>
 
                 <!-- File Upload Form -->
-                <div class="upload-form" *ngIf="!isManualMode()">
+                <div class="upload-form" *ngIf="creationSource() === 'upload'">
                     <div class="form-row">
                         <div class="form-group flex-1">
                             <label>Versionsnummer *</label>
@@ -128,8 +133,39 @@
                     </div>
                 </div>
 
+                <!-- Copy From Version Form -->
+                <div class="copy-form" *ngIf="creationSource() === 'copy'">
+                    <div class="form-group">
+                        <label>Neue Versionsnummer *</label>
+                        <input type="text" [(ngModel)]="versionNumber" placeholder="z.B. 1.2.0" class="input-base">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quelle Version *</label>
+                        <select [ngModel]="sourceVersionId()" (ngModelChange)="sourceVersionId.set(+$event)"
+                            class="input-base select">
+                            <option [ngValue]="null">Bitte wählen...</option>
+                            <option *ngFor="let v of selectedDataset()?.versions" [value]="v.id">
+                                v{{ v.versionNumber }} ({{ v.createdAt | date:'short' }})
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notizen</label>
+                        <textarea [(ngModel)]="versionNotes" placeholder="Was hat sich geändert?" class="input-base"
+                            rows="3"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn-primary" (click)="createFromVersion()" [disabled]="!sourceVersionId()">
+                            In Editor öffnen & Bearbeiten
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Manual Grid Editor -->
-                <div class="manual-editor" *ngIf="isManualMode()">
+                <div class="manual-editor" *ngIf="creationSource() === 'manual'">
                     <div class="form-group">
                         <label>Versionsnummer *</label>
                         <input type="text" [(ngModel)]="versionNumber" placeholder="z.B. 1.0.1" class="input-base"
