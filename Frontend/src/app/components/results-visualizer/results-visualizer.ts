@@ -44,14 +44,20 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
   outcomes = signal<InferenceNode[]>([]);
   connectionLines: ConnectionLine[] = [];
 
+  // Pan & Zoom State
+  transform = { x: 0, y: 0, scale: 1 };
+  isDragging = false;
+  lastMousePosition = { x: 0, y: 0 };
+
+  // Dimenstions for SVG - largely flexible now if we just overlay
+  svgHeight = 0;
+  svgWidth = 0;
+
   isLoading = signal<boolean>(false);
   hasNoTraining = signal<boolean>(false);
 
   @ViewChildren('nodeElement') nodeElements!: QueryList<ElementRef>;
   activeRuleId: string | null = null;
-
-  svgHeight = 600;
-  svgWidth = 1000;
 
   ngOnInit() {
     this.datasetService.getDatasets().subscribe(data => {
@@ -63,6 +69,57 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
     this.updateLines();
   }
 
+  // PAN & ZOOM LOGIC
+  onWheel(event: WheelEvent) {
+    if (!this.outcomes().length) return;
+    event.preventDefault();
+    const zoomIntensity = 0.1;
+    const direction = event.deltaY > 0 ? -1 : 1;
+    let newScale = this.transform.scale + (direction * zoomIntensity);
+
+    // Clamp scale
+    newScale = Math.min(Math.max(0.2, newScale), 3);
+
+    this.transform.scale = newScale;
+    this.updateLines(); // Update lines might be needed if lines are not scaled via CSS
+  }
+
+  startDrag(event: MouseEvent) {
+    if (!this.outcomes().length) return;
+    // Only drag if clicking on the background, not nodes
+    if ((event.target as HTMLElement).closest('.node')) return;
+
+    this.isDragging = true;
+    this.lastMousePosition = { x: event.clientX, y: event.clientY };
+  }
+
+  onDrag(event: MouseEvent) {
+    if (!this.isDragging) return;
+    event.preventDefault();
+
+    const dx = event.clientX - this.lastMousePosition.x;
+    const dy = event.clientY - this.lastMousePosition.y;
+
+    this.transform.x += dx;
+    this.transform.y += dy;
+
+    this.lastMousePosition = { x: event.clientX, y: event.clientY };
+  }
+
+  stopDrag() {
+    this.isDragging = false;
+  }
+
+  resetView() {
+    this.transform = { x: 0, y: 0, scale: 1 };
+  }
+
+  centerCanvas() {
+    // Simple offset to start slightly padded
+    this.transform = { x: 50, y: 50, scale: 1 };
+  }
+
+
   onSelectDataset(dsId: string) {
     const id = parseInt(dsId, 10);
     const ds = this.datasets().find(d => d.id === id);
@@ -73,6 +130,7 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
       this.latestResult.set(null);
       this.outcomes.set([]);
       this.hasNoTraining.set(false);
+      this.resetView();
     }
   }
 
@@ -121,7 +179,10 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
         const parsed = this.parseResultText(res.content);
         this.outcomes.set(parsed);
         // Delay to allow DOM render
-        setTimeout(() => this.updateLines(), 50);
+        setTimeout(() => {
+          this.centerCanvas();
+          this.updateLines();
+        }, 100);
       }
     });
   }
@@ -226,20 +287,22 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
       }
     });
 
-    const containerElement = document.querySelector('.viz-container');
-    if (!containerElement) return;
-    const containerRect = containerElement.getBoundingClientRect();
+    const content = document.querySelector('.canvas-content');
+    if (!content) return;
 
-    // Update dimensions
-    this.svgHeight = Math.max(containerElement.scrollHeight, 600);
-    this.svgWidth = Math.max(containerElement.scrollWidth, 1000);
+    const contentRect = content.getBoundingClientRect(); // Scaled Rect of wrapper
+    // We want coordinates relative to .canvas-content's Origin (top-left) but UNSCALED.
+    // Because the SVG is inside .canvas-content, it transforms WITH it.
+
+    const scale = this.transform.scale;
 
     const getRelPos = (rect: DOMRect, point: 'left' | 'right') => {
       const x = point === 'left' ? rect.left : rect.right;
       const y = rect.top + rect.height / 2;
+
       return {
-        x: x - containerRect.left + containerElement.scrollLeft,
-        y: y - containerRect.top + containerElement.scrollTop
+        x: (x - contentRect.left) / scale,
+        y: (y - contentRect.top) / scale
       };
     };
 
@@ -254,7 +317,6 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
         const ruleInPos = getRelPos(ruleRect, 'left');
         const ruleOutPos = getRelPos(ruleRect, 'right');
 
-        // Outcome -> Rule
         const isActive = this.activeRuleId === rule.id;
 
         newLines.push({
@@ -269,7 +331,6 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
           if (!condRect) return;
           const condPos = getRelPos(condRect, 'left');
 
-          // Rule -> Condition
           newLines.push({
             fromId: rule.id,
             toId: cond.id,
@@ -281,6 +342,17 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
     });
 
     this.connectionLines = newLines;
+
+    // Update SVG dimensions to match the unscaled layout size
+    // We can query the unscaled size by looking at .graph-layout's offsetWidth/Height?
+    // But .graph-layout is inside .canvas-content which is transformed...
+    // Actually offsetWidth/Height reflects unscaled size for transformed elements.
+    const layout = document.querySelector('.graph-layout') as HTMLElement;
+    if (layout) {
+      this.svgWidth = layout.offsetWidth;
+      this.svgHeight = layout.offsetHeight;
+    }
+
     this.cdr.detectChanges();
   }
 
@@ -295,8 +367,7 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
   }
 
   runInference() {
-    // todo call an API to evaluate the inputs against the tree
-    // stub for now
+    // stub
     console.log('Running inference with', this.currentInputs);
   }
 }

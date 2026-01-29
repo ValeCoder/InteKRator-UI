@@ -106,10 +106,22 @@
     flex: 1;
     background-color: var(--bg-primary);
     border-radius: var(--radius-sm);
-    overflow: auto;
+    overflow: hidden;
+    /* Hide overflow for canvas */
     position: relative;
     /* Context for absolute SVG */
     border: 1px solid rgba(255, 255, 255, 0.03);
+    cursor: grab;
+    user-select: none;
+    /* Prevent text selection while dragging */
+}
+
+.viz-container.grabbing {
+    cursor: grabbing;
+}
+
+.viz-container.grab {
+    cursor: grab;
 }
 
 .empty-viz {
@@ -119,6 +131,18 @@
     transform: translate(-50%, -50%);
     text-align: center;
     opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Canvas Content Layer */
+.canvas-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    /* transition: transform 0.1s ease-out; Optional: adds smooth drift but maybe laggy */
+    min-width: 100%;
+    min-height: 100%;
 }
 
 /* SVG Overlay */
@@ -147,7 +171,6 @@
 /* Graph Layout */
 .graph-layout {
     display: flex;
-    min-height: 100%;
     position: relative;
     z-index: 2;
     /* Above SVG */
@@ -291,4 +314,39 @@
 .condition-node.active {
     color: #fff;
     border-color: var(--accent-glow);
+}
+
+/* Floating Controls */
+.canvas-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+.btn-floating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-floating:hover {
+    background-color: var(--bg-secondary);
+    border-color: var(--accent-glow);
+    color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.btn-floating:active {
+    transform: translateY(0);
 }

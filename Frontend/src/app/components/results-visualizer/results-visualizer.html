@@ -66,79 +66,100 @@
     </section>
 
     <!-- Visualization Panel -->
-    <section class="viz-panel card" (scroll)="updateLines()">
+    <section class="viz-panel card">
         <div class="panel-header">
             <h3>Regel-Visualisierung</h3>
-            <span *ngIf="latestResult()" class="status-badge success">
-                Modell trainiert am {{ latestResult()?.createdAt | date:'short' }}
-            </span>
+            <div class="header-actions">
+                <span *ngIf="latestResult()" class="status-badge success">
+                    Modell trainiert am {{ latestResult()?.createdAt | date:'short' }}
+                </span>
+            </div>
         </div>
 
-        <div class="viz-container">
+        <!-- Canvas Container -->
+        <div class="viz-container" (wheel)="onWheel($event)" (mousedown)="startDrag($event)"
+            (mousemove)="onDrag($event)" (mouseup)="stopDrag()" (mouseleave)="stopDrag()" [class.grabbing]="isDragging"
+            [class.grab]="!isDragging && outcomes().length > 0">
+
+            <!-- Floating Controls -->
+            <div class="canvas-controls">
+                <button class="btn-floating" (click)="resetView()" title="Ansicht zentrieren">
+                    <lucide-icon name="maximize" class="icon-sm"></lucide-icon>
+                </button>
+            </div>
+
             <div *ngIf="outcomes().length === 0 && !isLoading()" class="empty-viz">
                 <p class="text-secondary" *ngIf="!hasNoTraining()">Keine Ergebnisse zum Anzeigen.</p>
                 <p class="text-secondary" *ngIf="hasNoTraining()">Kein Modell verfügbar.</p>
             </div>
 
-            <!-- SVG Overlay -->
-            <svg class="lines-overlay" [attr.width]="svgWidth" [attr.height]="svgHeight" *ngIf="outcomes().length > 0">
-                <path *ngFor="let line of connectionLines" [attr.d]="line.path" class="connection-path"
-                    [class.active]="line.active">
-                </path>
-            </svg>
+            <!-- Movable Content Layer -->
+            <div class="canvas-content"
+                [style.transform]="'translate(' + transform.x + 'px, ' + transform.y + 'px) scale(' + transform.scale + ')'"
+                *ngIf="outcomes().length > 0">
 
-            <!-- Graph Layout -->
-            <div class="graph-layout" *ngIf="outcomes().length > 0">
+                <!-- SVG Overlay -->
+                <!-- SVG should cover the graph layout size -->
+                <svg class="lines-overlay" [attr.width]="svgWidth" [attr.height]="svgHeight">
+                    <path *ngFor="let line of connectionLines" [attr.d]="line.path" class="connection-path"
+                        [class.active]="line.active">
+                    </path>
+                </svg>
 
-                <!-- Column 1: Outcomes -->
-                <div class="column col-outcomes">
-                    <div class="col-header">ERGEBNIS (OUTCOME)</div>
-                    <div class="nodes-stack">
-                        <div *ngFor="let outcome of outcomes()" class="node outcome-node" [id]="outcome.id"
-                            #nodeElement>
-                            <span class="outcome-label">{{ outcome.label }}</span>
+                <!-- Graph Layout -->
+                <div class="graph-layout">
+
+                    <!-- Column 1: Outcomes -->
+                    <div class="column col-outcomes">
+                        <div class="col-header">ERGEBNIS (OUTCOME)</div>
+                        <div class="nodes-stack">
+                            <div *ngFor="let outcome of outcomes()" class="node outcome-node" [id]="outcome.id"
+                                #nodeElement>
+                                <span class="outcome-label">{{ outcome.label }}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Column 2: Rules -->
-                <div class="column col-rules">
-                    <div class="col-header">REGELN</div>
-                    <div class="nodes-stack">
-                        <ng-container *ngFor="let outcome of outcomes()">
-                            <div *ngFor="let rule of outcome.children" class="node rule-node" [id]="rule.id"
-                                #nodeElement (mouseenter)="setActiveRule(rule.id)" (mouseleave)="setActiveRule(null)"
-                                [class.active]="activeRuleId === rule.id"
-                                [class.high-confidence]="(rule.confidence || 0) >= 0.95">
+                    <!-- Column 2: Rules -->
+                    <div class="column col-rules">
+                        <div class="col-header">REGELN</div>
+                        <div class="nodes-stack">
+                            <ng-container *ngFor="let outcome of outcomes()">
+                                <div *ngFor="let rule of outcome.children" class="node rule-node" [id]="rule.id"
+                                    #nodeElement (mouseenter)="setActiveRule(rule.id)"
+                                    (mouseleave)="setActiveRule(null)" [class.active]="activeRuleId === rule.id"
+                                    [class.high-confidence]="(rule.confidence || 0) >= 0.95">
 
-                                <div class="rule-content">
-                                    <span class="rule-title">{{ rule.label }}</span>
-                                    <span class="conf-text">{{ (rule.confidence || 0) * 100 | number:'1.0-1' }}%</span>
-                                </div>
-                                <div class="conf-bar-bg">
-                                    <div class="conf-bar-fill" [style.width.%]="(rule.confidence || 0) * 100"></div>
-                                </div>
-                            </div>
-                        </ng-container>
-                    </div>
-                </div>
-
-                <!-- Column 3: Conditions -->
-                <div class="column col-conditions">
-                    <div class="col-header">BEDINGUNGEN</div>
-                    <div class="nodes-stack">
-                        <ng-container *ngFor="let outcome of outcomes()">
-                            <ng-container *ngFor="let rule of outcome.children">
-                                <div *ngFor="let cond of rule.children" class="node condition-node" [id]="cond.id"
-                                    #nodeElement [class.active]="activeRuleId === rule.id">
-                                    <lucide-icon name="binary" class="icon-xs"></lucide-icon>
-                                    <span>{{ cond.label }}</span>
+                                    <div class="rule-content">
+                                        <span class="rule-title">{{ rule.label }}</span>
+                                        <span class="conf-text">{{ (rule.confidence || 0) * 100 | number:'1.0-1'
+                                            }}%</span>
+                                    </div>
+                                    <div class="conf-bar-bg">
+                                        <div class="conf-bar-fill" [style.width.%]="(rule.confidence || 0) * 100"></div>
+                                    </div>
                                 </div>
                             </ng-container>
-                        </ng-container>
+                        </div>
                     </div>
-                </div>
 
+                    <!-- Column 3: Conditions -->
+                    <div class="column col-conditions">
+                        <div class="col-header">BEDINGUNGEN</div>
+                        <div class="nodes-stack">
+                            <ng-container *ngFor="let outcome of outcomes()">
+                                <ng-container *ngFor="let rule of outcome.children">
+                                    <div *ngFor="let cond of rule.children" class="node condition-node" [id]="cond.id"
+                                        #nodeElement [class.active]="activeRuleId === rule.id">
+                                        <lucide-icon name="binary" class="icon-xs"></lucide-icon>
+                                        <span>{{ cond.label }}</span>
+                                    </div>
+                                </ng-container>
+                            </ng-container>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </section>
