@@ -50,7 +50,7 @@
                 <label class="section-label">Zustandsparameter</label>
                 <div class="inputs-grid">
                     <div class="input-group"
-                        *ngFor="let col of (selectedDataset()?.columns || []).slice(0, -1); let i = index">
+                        *ngFor="let col of getSafeColumns(selectedVersion()).slice(0, -1); let i = index">
                         <label>{{ col }}</label>
                         <input [(ngModel)]="currentInputs[i]" class="param-input input-base"
                             placeholder="Wert eingeben">
@@ -58,10 +58,17 @@
                 </div>
             </div>
 
-            <button class="btn-primary full-width" (click)="runInference()" [disabled]="!latestResult() || isLoading()">
-                <lucide-icon name="search" class="icon-sm"></lucide-icon>
-                Entscheidung analysieren
+            <button class="btn-primary full-width" (click)="runInference()"
+                [disabled]="!latestResult() || isLoading() || isInferring()">
+                <lucide-icon name="loader" class="icon-sm spin" *ngIf="isInferring()"></lucide-icon>
+                <lucide-icon name="search" class="icon-sm" *ngIf="!isInferring()"></lucide-icon>
+                <span>{{ isInferring() ? 'Analysiere...' : 'Entscheidung analysieren' }}</span>
             </button>
+
+            <div *ngIf="inferenceResultText()" class="inference-result">
+                <h4>Analyse-Ergebnis</h4>
+                <div>{{ inferenceResultText() }}</div>
+            </div>
         </div>
     </section>
 

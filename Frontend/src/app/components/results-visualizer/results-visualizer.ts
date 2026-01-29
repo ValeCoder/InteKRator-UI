@@ -134,13 +134,35 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
     }
   }
 
+  getSafeColumns(dstOrVer: any): string[] {
+    if (!dstOrVer || !dstOrVer.columns) return [];
+
+    let cols = dstOrVer.columns;
+
+    // If it's a string, split it
+    if (typeof cols === 'string') {
+      return cols.split(',').map((c: string) => c.trim()).filter((c: string) => c.length > 0);
+    }
+
+    // If it's an array
+    if (Array.isArray(cols)) {
+      // Double check if it's a single string inside an array
+      if (cols.length === 1 && typeof cols[0] === 'string' && cols[0].includes(',')) {
+        return cols[0].split(',').map((c: string) => c.trim()).filter((c: string) => c.length > 0);
+      }
+      return cols;
+    }
+
+    return [];
+  }
+
   onSelectVersion(vId: string) {
     const id = parseInt(vId, 10);
     const version = this.selectedDataset()?.versions.find(v => v.id === id);
     if (version) {
       this.selectedVersion.set(version);
 
-      const cols = (this.selectedDataset()?.columns || []);
+      const cols = this.getSafeColumns(version);
       const inputCols = cols.slice(0, -1);
       this.currentInputs = new Array(inputCols.length).fill('');
 
@@ -366,8 +388,91 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
     this.updateLines();
   }
 
+  inferenceResultText = signal<string>('');
+  isInferring = signal<boolean>(false);
+
   runInference() {
-    // stub
-    console.log('Running inference with', this.currentInputs);
+    const version = this.selectedVersion();
+    const result = this.latestResult();
+
+    if (!version || !result) return;
+
+    // Join inputs with spaces. Use ? for empty values to maintain positional alignment.
+    const state = this.currentInputs.map(i => (i && i.trim()) ? i.trim() : '?').join(' ');
+
+    // Basic validation
+    if (!state.trim()) {
+      alert('Please enter state values.');
+      return;
+    }
+
+    this.isInferring.set(true);
+    this.inferenceResultText.set('');
+    this.activeRuleId = null;
+    this.updateLines();
+
+    this.resultsService.runInference(result.id, state).subscribe({
+      next: (res) => {
+        this.isInferring.set(false);
+        this.inferenceResultText.set(res.output);
+
+        // Attempt to find which rule fired to highlight it
+        // Expected output might contain "Rule #..." or simply the rule text.
+        // If the tool returns the rule text that matched, we can try to find it in our outcomes.
+
+        // Heuristic: If output matches one of the rule labels or structure
+        // This depends heavily on what 'InteKRator.jar -infer why' returns.
+        // Let's assume it returns info that helps us identify the rule.
+        // For now, we will try to match based on rule index if present, or just show text.
+
+        // Example output might be:
+        // "inferred: action"
+        // "  because: condition -> action"
+
+        this.highlightInferredRule(res.output);
+      },
+      error: (err) => {
+        console.error(err);
+        this.isInferring.set(false);
+        this.inferenceResultText.set('Error running inference: ' + (err.error?.Error || err.message));
+      }
+    });
+  }
+
+  highlightInferredRule(output: string) {
+    // Try to find if the output contains identifying information for the rule.
+    // Since we built the graph with IDs `rule-1`, `rule-2`, etc based on file order,
+    // we hope the inference output might correllate or we can match the text.
+
+    // Simple text matching against our known rules
+    let bestMatchId: string | null = null;
+
+    // Check all loaded outcomes/rules
+    for (const outcome of this.outcomes()) {
+      if (outcome.children) {
+        for (const rule of outcome.children) {
+          // heuristic: check if rule label (e.g. "Rule #1") is in output? 
+          // Or reconstruct rule string "cond1 ^ cond2 -> action" and check if it's in output?
+
+          // Reconstruct key parts
+          const conditions = rule.children?.map(c => c.label.toLowerCase()) || [];
+          const action = outcome.label.toLowerCase();
+
+          // Crude check: if output contains action and most conditions
+          if (output.toLowerCase().includes(action)) {
+            const allCondsPresent = conditions.every(c => output.toLowerCase().includes(c));
+            if (allCondsPresent) {
+              bestMatchId = rule.id;
+              break; // optimization: stop at first match
+            }
+          }
+        }
+      }
+      if (bestMatchId) break;
+    }
+
+    if (bestMatchId) {
+      this.setActiveRule(bestMatchId);
+    }
   }
 }

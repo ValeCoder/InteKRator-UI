@@ -240,6 +240,7 @@
 
 .outcome-label {
     background: linear-gradient(to right, #fff, #ccc);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -349,4 +350,43 @@
 
 .btn-floating:active {
     transform: translateY(0);
+}
+
+.inference-result {
+    margin-top: var(--spacing-lg);
+    background-color: var(--bg-tertiary);
+    border-left: 4px solid var(--accent-primary);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+    overflow-x: auto;
+}
+
+.inference-result h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+}
+
+.inference-result div {
+    margin: 0;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }

@@ -27,4 +27,8 @@ export class ResultsService {
     getResultContent(resultId: number): Observable<{ content: string }> {
         return this.http.get<{ content: string }>(`${this.apiUrl}/result/${resultId}/content`);
     }
+
+    runInference(resultId: number, state: string): Observable<{ output: string }> {
+        return this.http.post<{ output: string }>('/api/inference', { resultId, state });
+    }
 }

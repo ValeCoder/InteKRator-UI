@@ -25,7 +25,8 @@ import {
   ChevronRight,
   ChevronUp,
   ChevronDown,
-  Maximize
+  Maximize,
+  Loader
 } from 'lucide-angular';
 
 
@@ -59,7 +60,8 @@ export const appConfig: ApplicationConfig = {
       ChevronRight,
       ChevronUp,
       ChevronDown,
-      Maximize
+      Maximize,
+      Loader
     }))
   ]
 };
