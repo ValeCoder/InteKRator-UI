@@ -192,9 +192,10 @@
                             <div class="grid-header"></div>
 
                             <!-- Rows -->
-                            <ng-container *ngFor="let row of manualGrid(); let rIndex = index">
-                                <input *ngFor="let cell of row; let cIndex = index" [ngModel]="cell"
-                                    (ngModelChange)="updateCell(rIndex, cIndex, $event)" class="grid-cell">
+                            <ng-container *ngFor="let row of manualGrid(); let rIndex = index; trackBy: trackByIndex">
+                                <input *ngFor="let cell of row; let cIndex = index; trackBy: trackByIndex"
+                                    [ngModel]="cell" (ngModelChange)="updateCell(rIndex, cIndex, $event)"
+                                    class="grid-cell">
                                 <button class="delete-row" (click)="deleteRow(rIndex)">
                                     <lucide-icon name="trash-2" class="icon-sm"></lucide-icon>
                                 </button>

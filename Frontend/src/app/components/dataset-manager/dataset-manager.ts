@@ -232,6 +232,10 @@ export class DatasetManagerComponent implements OnInit {
     this.manualGrid.update(grid => grid.filter((_, i) => i !== index));
   }
 
+  trackByIndex(index: number, item: any): number {
+    return index;
+  }
+
   updateCell(rowIndex: number, colIndex: number, value: string) {
     const grid = [...this.manualGrid()];
     grid[rowIndex] = [...grid[rowIndex]];
