@@ -259,6 +259,19 @@
     -webkit-text-fill-color: transparent;
 }
 
+.outcome-node.inferred {
+    background-color: rgba(245, 158, 11, 0.1);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.outcome-node.inferred .outcome-label {
+    background: linear-gradient(to right, #fbbf24, #f59e0b);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
 /* Rule Node */
 .rule-node {
     width: 220px;

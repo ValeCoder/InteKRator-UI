@@ -60,6 +60,7 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
   @ViewChildren('nodeElement') nodeElements!: QueryList<ElementRef>;
   activeRuleId: string | null = null;
   inferredRuleId: string | null = null;
+  inferredOutcomeId: string | null = null;
 
   ngOnInit() {
     this.datasetService.getDatasets().subscribe(data => {
@@ -416,6 +417,7 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
     this.inferenceResultText.set('');
     this.activeRuleId = null;
     this.inferredRuleId = null;
+    this.inferredOutcomeId = null;
     this.updateLines();
 
     this.resultsService.runInference(result.id, state).subscribe({
@@ -453,6 +455,7 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
 
     // Simple text matching against our known rules
     let bestMatchId: string | null = null;
+    let matchOutcomeId: string | null = null;
 
     // Check all loaded outcomes/rules
     for (const outcome of this.outcomes()) {
@@ -473,6 +476,7 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
             const allCondsPresent = conditions.every(c => normalizedOutput.includes(c));
             if (allCondsPresent) {
               bestMatchId = rule.id;
+              matchOutcomeId = outcome.id;
               break; // optimization: stop at first match
             }
           }
@@ -483,6 +487,7 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
 
     if (bestMatchId) {
       this.inferredRuleId = bestMatchId;
+      this.inferredOutcomeId = matchOutcomeId;
       this.updateLines();
     }
   }
@@ -491,6 +496,7 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
     this.currentInputs = this.currentInputs.map(() => '');
     this.inferenceResultText.set('');
     this.inferredRuleId = null;
+    this.inferredOutcomeId = null;
     this.activeRuleId = null;
     this.isInferring.set(false);
     this.updateLines();

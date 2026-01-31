@@ -127,7 +127,7 @@
                         <div class="col-header">ERGEBNIS (OUTCOME)</div>
                         <div class="nodes-stack">
                             <div *ngFor="let outcome of outcomes()" class="node outcome-node" [id]="outcome.id"
-                                #nodeElement>
+                                #nodeElement [class.inferred]="inferredOutcomeId === outcome.id">
                                 <span class="outcome-label">{{ outcome.label }}</span>
                             </div>
                         </div>
