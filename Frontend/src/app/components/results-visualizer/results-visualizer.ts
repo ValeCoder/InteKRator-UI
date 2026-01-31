@@ -18,7 +18,8 @@ interface ConnectionLine {
   path: string;
   fromId: string;
   toId: string;
-  active: boolean;
+  active: boolean;   // Hover state
+  inferred: boolean; // Persistent inference state
 }
 
 @Component({
@@ -58,6 +59,7 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
 
   @ViewChildren('nodeElement') nodeElements!: QueryList<ElementRef>;
   activeRuleId: string | null = null;
+  inferredRuleId: string | null = null;
 
   ngOnInit() {
     this.datasetService.getDatasets().subscribe(data => {
@@ -130,6 +132,7 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
       this.latestResult.set(null);
       this.outcomes.set([]);
       this.hasNoTraining.set(false);
+      this.resetInference();
       this.resetView();
     }
   }
@@ -340,12 +343,14 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
         const ruleOutPos = getRelPos(ruleRect, 'right');
 
         const isActive = this.activeRuleId === rule.id;
+        const isInferred = this.inferredRuleId === rule.id;
 
         newLines.push({
           fromId: outcome.id,
           toId: rule.id,
           path: this.createBezier(outPos.x, outPos.y, ruleInPos.x, ruleInPos.y),
-          active: isActive
+          active: isActive,
+          inferred: isInferred
         });
 
         rule.children?.forEach(cond => {
@@ -357,7 +362,8 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
             fromId: rule.id,
             toId: cond.id,
             path: this.createBezier(ruleOutPos.x, ruleOutPos.y, condPos.x, condPos.y),
-            active: isActive
+            active: isActive,
+            inferred: isInferred
           });
         });
       });
@@ -409,6 +415,7 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
     this.isInferring.set(true);
     this.inferenceResultText.set('');
     this.activeRuleId = null;
+    this.inferredRuleId = null;
     this.updateLines();
 
     this.resultsService.runInference(result.id, state).subscribe({
@@ -451,16 +458,19 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
     for (const outcome of this.outcomes()) {
       if (outcome.children) {
         for (const rule of outcome.children) {
-          // heuristic: check if rule label (e.g. "Rule #1") is in output? 
-          // Or reconstruct rule string "cond1 ^ cond2 -> action" and check if it's in output?
+          // Flatten everything to lowercase and space-separated for loose matching
+          // "No Recovery" -> "no recovery"
+          // "no_recovery" -> "no recovery"
+          const normalize = (s: string) => s.toLowerCase().replace(/_/g, ' ');
 
-          // Reconstruct key parts
-          const conditions = rule.children?.map(c => c.label.toLowerCase()) || [];
-          const action = outcome.label.toLowerCase();
+          const normalizedOutput = normalize(output);
+          const normalizedAction = normalize(outcome.label);
 
-          // Crude check: if output contains action and most conditions
-          if (output.toLowerCase().includes(action)) {
-            const allCondsPresent = conditions.every(c => output.toLowerCase().includes(c));
+          const conditions = rule.children?.map(c => normalize(c.label)) || [];
+
+          // Check if action and all conditions are present in the output
+          if (normalizedOutput.includes(normalizedAction)) {
+            const allCondsPresent = conditions.every(c => normalizedOutput.includes(c));
             if (allCondsPresent) {
               bestMatchId = rule.id;
               break; // optimization: stop at first match
@@ -472,7 +482,17 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
     }
 
     if (bestMatchId) {
-      this.setActiveRule(bestMatchId);
+      this.inferredRuleId = bestMatchId;
+      this.updateLines();
     }
+  }
+
+  resetInference() {
+    this.currentInputs = this.currentInputs.map(() => '');
+    this.inferenceResultText.set('');
+    this.inferredRuleId = null;
+    this.activeRuleId = null;
+    this.isInferring.set(false);
+    this.updateLines();
   }
 }

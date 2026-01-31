@@ -168,6 +168,20 @@
     filter: drop-shadow(0 0 4px var(--accent-glow));
 }
 
+.connection-path.inferred {
+    stroke: #f59e0b;
+    /* Amber/Orange for inference decision */
+    stroke-width: 3px;
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.4));
+    opacity: 0.9;
+}
+
+.connection-path.inferred.active {
+    stroke: #fbbf24;
+    stroke-width: 4px;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+}
+
 /* Graph Layout */
 .graph-layout {
     display: flex;
@@ -261,6 +275,12 @@
     /* Accent tint */
 }
 
+.rule-node.inferred {
+    border-color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.1);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+}
+
 .rule-node.high-confidence {
     border-color: rgba(16, 185, 129, 0.4);
 }
@@ -315,6 +335,12 @@
 .condition-node.active {
     color: #fff;
     border-color: var(--accent-glow);
+}
+
+.condition-node.inferred {
+    color: #fcd34d;
+    border-color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.05);
 }
 
 /* Floating Controls */
@@ -389,4 +415,23 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+.btn-secondary {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    padding: 0.625rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.05);
 }

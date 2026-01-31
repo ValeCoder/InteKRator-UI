@@ -58,6 +58,12 @@
                 </div>
             </div>
 
+            <button class="btn-secondary full-width" (click)="resetInference()" *ngIf="latestResult()"
+                [style.margin-bottom.px]="8" title="Eingaben und Visualisierung zurücksetzen">
+                <lucide-icon name="rotate-ccw" class="icon-sm"></lucide-icon>
+                <span>Zurücksetzen</span>
+            </button>
+
             <button class="btn-primary full-width" (click)="runInference()"
                 [disabled]="!latestResult() || isLoading() || isInferring()">
                 <lucide-icon name="loader" class="icon-sm spin" *ngIf="isInferring()"></lucide-icon>
@@ -109,7 +115,7 @@
                 <!-- SVG should cover the graph layout size -->
                 <svg class="lines-overlay" [attr.width]="svgWidth" [attr.height]="svgHeight">
                     <path *ngFor="let line of connectionLines" [attr.d]="line.path" class="connection-path"
-                        [class.active]="line.active">
+                        [class.active]="line.active" [class.inferred]="line.inferred">
                     </path>
                 </svg>
 
@@ -135,6 +141,7 @@
                                 <div *ngFor="let rule of outcome.children" class="node rule-node" [id]="rule.id"
                                     #nodeElement (mouseenter)="setActiveRule(rule.id)"
                                     (mouseleave)="setActiveRule(null)" [class.active]="activeRuleId === rule.id"
+                                    [class.inferred]="inferredRuleId === rule.id"
                                     [class.high-confidence]="(rule.confidence || 0) >= 0.95">
 
                                     <div class="rule-content">
@@ -157,7 +164,8 @@
                             <ng-container *ngFor="let outcome of outcomes()">
                                 <ng-container *ngFor="let rule of outcome.children">
                                     <div *ngFor="let cond of rule.children" class="node condition-node" [id]="cond.id"
-                                        #nodeElement [class.active]="activeRuleId === rule.id">
+                                        #nodeElement [class.active]="activeRuleId === rule.id"
+                                        [class.inferred]="inferredRuleId === rule.id">
                                         <lucide-icon name="binary" class="icon-xs"></lucide-icon>
                                         <span>{{ cond.label }}</span>
                                     </div>
