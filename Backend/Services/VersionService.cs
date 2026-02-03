@@ -35,6 +35,20 @@ public class VersionService : IVersionService
 
     public async Task<DatasetVersion> CreateManualVersionAsync(int datasetId, string versionNumber, string notes, List<string> columns, string content)
     {
+        // Ensure uploads directory exists
+        var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+        if (!Directory.Exists(uploadPath))
+        {
+            Directory.CreateDirectory(uploadPath);
+        }
+
+        // Generate unique filename
+        var uniqueFileName = $"{Guid.NewGuid()}_manual.txt";
+        var filePath = Path.Combine(uploadPath, uniqueFileName);
+
+        // Write content to file
+        await File.WriteAllTextAsync(filePath, content);
+
         var version = new DatasetVersion
         {
             DatasetId = datasetId,
@@ -42,6 +56,7 @@ public class VersionService : IVersionService
             Notes = notes,
             Columns = string.Join(",", columns),
             Content = content,
+            FilePath = filePath,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -58,6 +73,21 @@ public class VersionService : IVersionService
             throw new ArgumentException("Source version not found");
         }
 
+        // Ensure uploads directory exists
+        var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+        if (!Directory.Exists(uploadPath))
+        {
+            Directory.CreateDirectory(uploadPath);
+        }
+
+        // Generate unique filename
+        var uniqueFileName = $"{Guid.NewGuid()}_copy.txt";
+        var filePath = Path.Combine(uploadPath, uniqueFileName);
+
+        // Write content to new file
+        // We use sourceVersion.Content because that is the parsed/clean content used for training
+        await File.WriteAllTextAsync(filePath, sourceVersion.Content);
+
         var version = new DatasetVersion
         {
             DatasetId = datasetId,
@@ -65,8 +95,8 @@ public class VersionService : IVersionService
             Notes = notes,
             Columns = sourceVersion.Columns,
             Content = sourceVersion.Content,
+            FilePath = filePath,
             CreatedAt = DateTime.UtcNow
-            // FilePath is intentionally left null as we are creating a new logical version based on content
         };
 
         _context.DatasetVersions.Add(version);
