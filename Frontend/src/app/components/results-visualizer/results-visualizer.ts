@@ -450,39 +450,48 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
 
   highlightInferredRule(output: string) {
     // Try to find if the output contains identifying information for the rule.
-    // Since we built the graph with IDs `rule-1`, `rule-2`, etc based on file order,
-    // we hope the inference output might correllate or we can match the text.
+    // We score matches to find the "best" match rather than the first one.
+    // Score = length of outcome label + sum of lengths of matched condition labels.
+    // This prioritizes:
+    // 1. Matches that include the full outcome name (longer is better to avoid substring issues like "Recovery" vs "No Recovery")
+    // 2. Matches that include more/longer conditions (specificity).
 
-    // Simple text matching against our known rules
     let bestMatchId: string | null = null;
     let matchOutcomeId: string | null = null;
+    let maxScore = -1;
+
+    // Helper to normalize strings for comparison
+    const normalize = (s: string) => s.toLowerCase().replace(/_/g, ' ');
+    const normalizedOutput = normalize(output);
 
     // Check all loaded outcomes/rules
     for (const outcome of this.outcomes()) {
       if (outcome.children) {
         for (const rule of outcome.children) {
-          // Flatten everything to lowercase and space-separated for loose matching
-          // "No Recovery" -> "no recovery"
-          // "no_recovery" -> "no recovery"
-          const normalize = (s: string) => s.toLowerCase().replace(/_/g, ' ');
-
-          const normalizedOutput = normalize(output);
           const normalizedAction = normalize(outcome.label);
-
           const conditions = rule.children?.map(c => normalize(c.label)) || [];
 
-          // Check if action and all conditions are present in the output
+          // Check if action is present in the output
           if (normalizedOutput.includes(normalizedAction)) {
+            // Check if ALL conditions for this rule are present
             const allCondsPresent = conditions.every(c => normalizedOutput.includes(c));
+
             if (allCondsPresent) {
-              bestMatchId = rule.id;
-              matchOutcomeId = outcome.id;
-              break; // optimization: stop at first match
+              // Calculate Score
+              // Base score: length of outcome label
+              let score = normalizedAction.length;
+              // Add length of all matched conditions
+              score += conditions.reduce((acc, c) => acc + c.length, 0);
+
+              if (score > maxScore) {
+                maxScore = score;
+                bestMatchId = rule.id;
+                matchOutcomeId = outcome.id;
+              }
             }
           }
         }
       }
-      if (bestMatchId) break;
     }
 
     if (bestMatchId) {
