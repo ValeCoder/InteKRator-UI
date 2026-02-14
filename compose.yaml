@@ -1,7 +1,25 @@
 ﻿services:
-  intekrator_ui:
-    image: intekrator_ui
+  backend:
     build:
       context: .
-      dockerfile: InteKRator_UI/Dockerfile
+      dockerfile: Backend/Dockerfile
+    ports:
+      - "7200:7200"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:7200
+      - TrainingSettings__JarPath=/app/InteKRator.jar
+    volumes:
+      - ./Backend/db:/app/db # Persist SQLite DB
+      - ./Backend/Uploads:/app/Uploads # Persist uploads
+    restart: always
 
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    ports:
+      - "7201:7201"
+    depends_on:
+      - backend
+    restart: always
