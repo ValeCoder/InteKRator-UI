@@ -18,6 +18,8 @@ RUN dotnet publish "Backend.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:U
 
 FROM base AS final
 WORKDIR /app
+RUN apt-get update && apt-get install -y default-jre && rm -rf /var/lib/apt/lists/*
+
 COPY --from=publish /app/publish .
 # Copy the jar file from the root context (assuming context is project root)
 COPY InteKRator.jar /app/InteKRator.jar
