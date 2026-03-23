@@ -23,6 +23,8 @@ public class DatasetVersion
 
     public int DatasetId { get; set; }
 
+    public int? OutcomeColumnIndex { get; set; } // null = last column (default)
+
     [ForeignKey("DatasetId")]
     public Dataset Dataset { get; set; } = null!;
 }

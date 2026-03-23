@@ -40,11 +40,39 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// Automatically create database if it doesn't exist
+// Apply all pending migrations (creates DB if it doesn't exist).
+// For databases previously created via EnsureCreated (no migration history),
+// we bootstrap the migration table so that only the new AddOutcomeColumnIndex
+// migration actually runs, while InitialCreate is treated as already applied.
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.EnsureCreated();
+
+    bool hasMigrationHistory = false;
+    try
+    {
+        dbContext.Database.ExecuteSqlRaw("SELECT 1 FROM __EFMigrationsHistory LIMIT 1");
+        hasMigrationHistory = true;
+    }
+    catch { /* Table doesn't exist yet */ }
+
+    if (!hasMigrationHistory && dbContext.Database.CanConnect())
+    {
+        // Existing EnsureCreated database: register InitialCreate as already applied
+        // so that Migrate() only runs AddOutcomeColumnIndex.
+        dbContext.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS __EFMigrationsHistory (
+                MigrationId TEXT NOT NULL CONSTRAINT PK___EFMigrationsHistory PRIMARY KEY,
+                ProductVersion TEXT NOT NULL
+            )
+            """);
+        dbContext.Database.ExecuteSqlRaw("""
+            INSERT OR IGNORE INTO __EFMigrationsHistory (MigrationId, ProductVersion)
+            VALUES ('20260323134849_InitialCreate', '9.0.0')
+            """);
+    }
+
+    dbContext.Database.Migrate();
 }
 
 app.UseCors();

@@ -10,6 +10,7 @@ interface InferenceNode {
   id: string; // unique ID for SVG connections
   type: 'outcome' | 'rule' | 'condition';
   label: string;
+  parameter?: string; // column/parameter name for condition nodes
   confidence?: number;
   children?: InferenceNode[];
 }
@@ -41,6 +42,8 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
   latestResult = signal<TrainingResult | null>(null);
 
   currentInputs: string[] = [];
+  inputColumns = signal<{ col: string; inputIdx: number }[]>([]);
+  valueColumnMap = new Map<string, string[]>(); // rawValue → column names
 
   outcomes = signal<InferenceNode[]>([]);
   connectionLines: ConnectionLine[] = [];
@@ -132,6 +135,8 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
       this.trainingResults.set([]);
       this.latestResult.set(null);
       this.outcomes.set([]);
+      this.inputColumns.set([]);
+      this.valueColumnMap = new Map();
       this.hasNoTraining.set(false);
       this.resetInference();
       this.resetView();
@@ -167,11 +172,42 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
       this.selectedVersion.set(version);
 
       const cols = this.getSafeColumns(version);
-      const inputCols = cols.slice(0, -1);
+      const outcomeIdx = version.outcomeColumnIndex != null ? version.outcomeColumnIndex : cols.length - 1;
+
+      // Build stable input columns list once (avoids re-creating arrays in template)
+      let inputIdx = 0;
+      const inputCols = cols
+        .map((col, i) => ({ col, inputIdx: i !== outcomeIdx ? inputIdx++ : -1 }))
+        .filter(x => x.inputIdx >= 0);
+      this.inputColumns.set(inputCols);
       this.currentInputs = new Array(inputCols.length).fill('');
+
+      this.valueColumnMap = this.buildValueColumnMap(version);
 
       this.fetchResults(version.id);
     }
+  }
+
+  buildValueColumnMap(version: DatasetVersion): Map<string, string[]> {
+    const map = new Map<string, string[]>();
+    const cols = this.getSafeColumns(version);
+    if (!version.content) return map;
+
+    const rows = version.content.trim().split('\n');
+    rows.forEach(row => {
+      const cells = row.trim().split(/\s+/);
+      cells.forEach((cell, i) => {
+        if (i < cols.length && cell.trim()) {
+          const key = cell.toLowerCase();
+          const existing = map.get(key) || [];
+          if (!existing.includes(cols[i])) {
+            existing.push(cols[i]);
+            map.set(key, existing);
+          }
+        }
+      });
+    });
+    return map;
   }
 
   fetchResults(versionId: number) {
@@ -233,7 +269,8 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
         const conditionsPart = parts[0].trim();
         const actionPart = parts[1].trim();
 
-        const conditions = conditionsPart.split('^').map(c => formatLabel(c.trim()));
+        const rawConditions = conditionsPart.split('^').map(c => c.trim());
+        const conditions = rawConditions.map(c => formatLabel(c));
 
         // Parse "recovery [0.8]"
         const match = actionPart.match(/(.+)\s+\[([\d.]+)\]/);
@@ -246,11 +283,15 @@ export class ResultsVisualizerComponent implements OnInit, AfterViewChecked {
           type: 'rule',
           label: `Rule #${ruleCounter - 1}`,
           confidence: confidence,
-          children: conditions.map((c, i) => ({
-            id: `${ruleId}-cond-${i}`,
-            type: 'condition',
-            label: c
-          }))
+          children: rawConditions.map((rawCond, i) => {
+            const paramNames = this.valueColumnMap.get(rawCond.toLowerCase()) || [];
+            return {
+              id: `${ruleId}-cond-${i}`,
+              type: 'condition' as const,
+              label: conditions[i],
+              parameter: paramNames.join(' / ') || undefined
+            };
+          })
         };
 
         const currentRules = rulesMap.get(actionLabel) || [];

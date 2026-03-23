@@ -30,7 +30,11 @@ export class DatasetManagerComponent implements OnInit {
   versionNotes = '';
   selectedFile: File | null = null;
   useFirstRowAsHeader = signal(true);
-  uploadColumns = signal<string[]>(['State1', 'State2', 'Action']); // Reusing logic but separate from manual grid
+  uploadColumns = signal<string[]>(['State1', 'State2', 'Action']);
+  uploadOutcomeColumnIndex = signal<number | null>(null); // null = last column
+
+  // Manual Form
+  manualOutcomeColumnIndex = signal<number | null>(null); // null = last column
 
   ngOnInit() {
     this.loadDatasets();
@@ -173,14 +177,16 @@ export class DatasetManagerComponent implements OnInit {
       this.versionNotes,
       this.selectedFile,
       this.useFirstRowAsHeader(),
-      this.useFirstRowAsHeader() ? undefined : this.uploadColumns()
+      this.useFirstRowAsHeader() ? undefined : this.uploadColumns(),
+      this.useFirstRowAsHeader() ? null : this.uploadOutcomeColumnIndex()
     ).subscribe({
       next: (version) => {
         alert(`Version ${version.versionNumber} erfolgreich hochgeladen.`);
         this.versionNumber = '';
         this.versionNotes = '';
         this.selectedFile = null;
-        this.selectDataset(ds); // Refresh versions
+        this.uploadOutcomeColumnIndex.set(null);
+        this.selectDataset(ds);
       },
       error: (err) => alert('Fehler beim Upload: ' + err.error)
     });
@@ -221,6 +227,12 @@ export class DatasetManagerComponent implements OnInit {
   removeColumn(index: number) {
     this.manualColumns.update(cols => cols.filter((_, i) => i !== index));
     this.manualGrid.update(grid => grid.map(row => row.filter((_, i) => i !== index)));
+    // Reset outcome index if it pointed to the removed column or is now out of bounds
+    const newLen = this.manualColumns().length;
+    const cur = this.manualOutcomeColumnIndex();
+    if (cur != null && (cur === index || cur >= newLen)) {
+      this.manualOutcomeColumnIndex.set(null);
+    }
   }
 
   addRow() {
@@ -257,13 +269,15 @@ export class DatasetManagerComponent implements OnInit {
       this.versionNumber,
       this.versionNotes,
       this.manualColumns(),
-      content
+      content,
+      this.manualOutcomeColumnIndex()
     ).subscribe({
       next: (version) => {
         alert(`Manuelle Version ${version.versionNumber} erstellt.`);
         this.versionNumber = '';
         this.versionNotes = '';
-        this.creationSource.set('upload'); // Reset
+        this.manualOutcomeColumnIndex.set(null);
+        this.creationSource.set('upload');
         this.selectDataset(ds);
       },
       error: (err) => alert('Fehler: ' + err.error)
@@ -277,6 +291,23 @@ export class DatasetManagerComponent implements OnInit {
         if (ds) this.selectDataset(ds);
       });
     }
+  }
+
+  getEffectiveOutcomeIndex(colCount: number, selected: number | null): number {
+    return selected != null ? selected : colCount - 1;
+  }
+
+  setOutcomeColumn(version: DatasetVersion, colIndex: number) {
+    const newIndex = version.outcomeColumnIndex === colIndex ? null : colIndex;
+    this.datasetService.updateOutcomeColumn(version.id, newIndex).subscribe(updated => {
+      version.outcomeColumnIndex = updated.outcomeColumnIndex;
+    });
+  }
+
+  getOutcomeColumnIndex(version: DatasetVersion): number {
+    const cols = this.getColumns(version);
+    if (version.outcomeColumnIndex != null) return version.outcomeColumnIndex;
+    return cols.length - 1; // default: last column
   }
 
   // Accordion Logic

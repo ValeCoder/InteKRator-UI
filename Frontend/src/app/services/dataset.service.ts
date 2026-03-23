@@ -35,9 +35,9 @@ export class DatasetService {
         return this.http.get<DatasetVersion[]>(`${this.versionUrl}/dataset/${datasetId}`);
     }
 
-    createManualVersion(datasetId: number, versionNumber: string, notes: string, columns: string[], content: string): Observable<DatasetVersion> {
+    createManualVersion(datasetId: number, versionNumber: string, notes: string, columns: string[], content: string, outcomeColumnIndex?: number | null): Observable<DatasetVersion> {
         return this.http.post<DatasetVersion>(`${this.versionUrl}/manual`, {
-            datasetId, versionNumber, notes, columns, content
+            datasetId, versionNumber, notes, columns, content, outcomeColumnIndex
         });
     }
 
@@ -47,7 +47,7 @@ export class DatasetService {
         });
     }
 
-    uploadVersion(datasetId: number, versionNumber: string, notes: string, file: File, useFirstRowAsHeader: boolean, columns?: string[]): Observable<DatasetVersion> {
+    uploadVersion(datasetId: number, versionNumber: string, notes: string, file: File, useFirstRowAsHeader: boolean, columns?: string[], outcomeColumnIndex?: number | null): Observable<DatasetVersion> {
         const formData = new FormData();
         formData.append('datasetId', datasetId.toString());
         formData.append('versionNumber', versionNumber);
@@ -58,8 +58,15 @@ export class DatasetService {
         if (columns && columns.length > 0) {
             formData.append('manualColumns', columns.join(','));
         }
+        if (outcomeColumnIndex != null) {
+            formData.append('outcomeColumnIndex', outcomeColumnIndex.toString());
+        }
 
         return this.http.post<DatasetVersion>(`${this.versionUrl}/upload`, formData);
+    }
+
+    updateOutcomeColumn(versionId: number, outcomeColumnIndex: number | null): Observable<DatasetVersion> {
+        return this.http.patch<DatasetVersion>(`${this.versionUrl}/${versionId}/outcome-column`, { outcomeColumnIndex });
     }
 
     deleteVersion(id: number): Observable<void> {

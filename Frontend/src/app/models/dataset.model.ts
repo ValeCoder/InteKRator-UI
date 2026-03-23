@@ -16,4 +16,5 @@ export interface DatasetVersion {
     content: string;
     createdAt: string;
     datasetId: number;
+    outcomeColumnIndex?: number | null;
 }

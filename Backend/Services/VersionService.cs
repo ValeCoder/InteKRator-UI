@@ -33,7 +33,7 @@ public class VersionService : IVersionService
         return version;
     }
 
-    public async Task<DatasetVersion> CreateManualVersionAsync(int datasetId, string versionNumber, string notes, List<string> columns, string content)
+    public async Task<DatasetVersion> CreateManualVersionAsync(int datasetId, string versionNumber, string notes, List<string> columns, string content, int? outcomeColumnIndex = null)
     {
         // Ensure uploads directory exists
         var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
@@ -57,6 +57,7 @@ public class VersionService : IVersionService
             Columns = string.Join(",", columns),
             Content = content,
             FilePath = filePath,
+            OutcomeColumnIndex = outcomeColumnIndex,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -104,7 +105,7 @@ public class VersionService : IVersionService
         return version;
     }
 
-    public async Task<DatasetVersion> UploadVersionAsync(int datasetId, string versionNumber, string notes, string fileName, Stream fileStream, bool useFirstRowAsHeader = true, string? manualColumns = null)
+    public async Task<DatasetVersion> UploadVersionAsync(int datasetId, string versionNumber, string notes, string fileName, Stream fileStream, bool useFirstRowAsHeader = true, string? manualColumns = null, int? outcomeColumnIndex = null)
     {
         var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
         if (!Directory.Exists(uploadPath))
@@ -115,41 +116,70 @@ public class VersionService : IVersionService
         var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
         var filePath = Path.Combine(uploadPath, uniqueFileName);
 
-        // Read content first
+        bool isCsv = Path.GetExtension(fileName).ToLower() == ".csv";
+
         using (var reader = new StreamReader(fileStream))
         {
             var rawContent = await reader.ReadToEndAsync();
-            var lines = rawContent.Trim().Split('\n').ToList();
+            var lines = rawContent.Trim().Split('\n').Select(l => l.TrimEnd('\r')).ToList();
 
-            string savedContent = rawContent;
-            string columnsStr = "";
+            string savedContent;
+            string columnsStr;
+            string fileContent; // what gets written to disk (space-separated for JAR)
 
-            if (useFirstRowAsHeader)
+            if (isCsv)
             {
-                // Inferred columns
-                if (lines.Count > 0)
+                // Parse CSV: convert comma-separated → space-separated
+                if (useFirstRowAsHeader && lines.Count > 0)
                 {
-                    var headerLine = lines[0];
-                    columnsStr = string.Join(",", headerLine.Trim().Replace("\t", " ").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
-                    
-                    // Remove header from content to avoid duplication in grid
-                    lines.RemoveAt(0);
-                    savedContent = string.Join("\n", lines);
+                    var headerCells = lines[0].Split(',').Select(c => c.Trim()).ToArray();
+                    columnsStr = string.Join(",", headerCells);
+
+                    var dataLines = lines.Skip(1)
+                        .Select(line => string.Join(" ", line.Split(',').Select(c => c.Trim())))
+                        .ToList();
+                    savedContent = string.Join("\n", dataLines);
+
+                    // File on disk: space-separated with header for JAR
+                    fileContent = string.Join(" ", headerCells) + "\n" + savedContent;
+                }
+                else
+                {
+                    columnsStr = manualColumns ?? "";
+                    var dataLines = lines
+                        .Select(line => string.Join(" ", line.Split(',').Select(c => c.Trim())))
+                        .ToList();
+                    savedContent = string.Join("\n", dataLines);
+                    fileContent = savedContent;
                 }
             }
             else
             {
-                // Manual columns
-                columnsStr = manualColumns ?? "";
-                // Content remains full (first line is data)
+                // Original space-separated handling
+                if (useFirstRowAsHeader)
+                {
+                    if (lines.Count > 0)
+                    {
+                        var headerLine = lines[0];
+                        columnsStr = string.Join(",", headerLine.Trim().Replace("\t", " ").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
+                        lines.RemoveAt(0);
+                        savedContent = string.Join("\n", lines);
+                    }
+                    else
+                    {
+                        columnsStr = "";
+                        savedContent = "";
+                    }
+                }
+                else
+                {
+                    columnsStr = manualColumns ?? "";
+                    savedContent = string.Join("\n", lines);
+                }
+                fileContent = rawContent;
             }
 
-            // Save to file (we will save the MODIFIED content without header if stripped, to match DB?)
-            // Or should file remain original? Usually file is original. 
-            // Let's keep file original on disk for audit, but DB content is what's used for display.
-            // Actually, if we download the file later, we might want the original. 
-            // But for this task, the DB 'Content' drives the grid.
-            await File.WriteAllTextAsync(filePath, rawContent); 
+            await File.WriteAllTextAsync(filePath, fileContent);
 
             var version = new DatasetVersion
             {
@@ -159,6 +189,7 @@ public class VersionService : IVersionService
                 FilePath = filePath,
                 Content = savedContent,
                 Columns = columnsStr,
+                OutcomeColumnIndex = outcomeColumnIndex,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -166,6 +197,16 @@ public class VersionService : IVersionService
             await _context.SaveChangesAsync();
             return version;
         }
+    }
+
+    public async Task<DatasetVersion?> UpdateOutcomeColumnIndexAsync(int versionId, int? outcomeColumnIndex)
+    {
+        var version = await _context.DatasetVersions.FindAsync(versionId);
+        if (version == null) return null;
+
+        version.OutcomeColumnIndex = outcomeColumnIndex;
+        await _context.SaveChangesAsync();
+        return version;
     }
 
     public async Task<bool> DeleteVersionAsync(int id)

@@ -337,12 +337,28 @@
 /* Condition Node */
 .condition-node {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
     padding: 8px 12px;
     font-size: 0.875rem;
     border-radius: var(--radius-sm);
     min-width: 180px;
+}
+
+.cond-param {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.cond-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .condition-node.active {

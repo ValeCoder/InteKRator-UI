@@ -49,10 +49,9 @@
             <div class="form-section" *ngIf="latestResult()">
                 <label class="section-label">Zustandsparameter</label>
                 <div class="inputs-grid">
-                    <div class="input-group"
-                        *ngFor="let col of getSafeColumns(selectedVersion()).slice(0, -1); let i = index">
-                        <label>{{ col }}</label>
-                        <input [(ngModel)]="currentInputs[i]" class="param-input input-base"
+                    <div class="input-group" *ngFor="let item of inputColumns()">
+                        <label>{{ item.col }}</label>
+                        <input [(ngModel)]="currentInputs[item.inputIdx]" class="param-input input-base"
                             placeholder="Wert eingeben">
                     </div>
                 </div>
@@ -166,8 +165,11 @@
                                     <div *ngFor="let cond of rule.children" class="node condition-node" [id]="cond.id"
                                         #nodeElement [class.active]="activeRuleId === rule.id"
                                         [class.inferred]="inferredRuleId === rule.id">
-                                        <lucide-icon name="binary" class="icon-xs"></lucide-icon>
-                                        <span>{{ cond.label }}</span>
+                                        <span class="cond-param" *ngIf="cond.parameter">{{ cond.parameter }}</span>
+                                        <div class="cond-value">
+                                            <lucide-icon name="binary" class="icon-xs"></lucide-icon>
+                                            <span>{{ cond.label }}</span>
+                                        </div>
                                     </div>
                                 </ng-container>
                             </ng-container>

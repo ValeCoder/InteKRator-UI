@@ -37,13 +37,13 @@ public class VersionController : ControllerBase
         return CreatedAtAction(nameof(GetVersion), new { id = createdVersion.Id }, createdVersion);
     }
 
-    public record CreateManualVersionRequest(int DatasetId, string VersionNumber, string Notes, List<string> Columns, string Content);
+    public record CreateManualVersionRequest(int DatasetId, string VersionNumber, string Notes, List<string> Columns, string Content, int? OutcomeColumnIndex = null);
 
     [HttpPost("manual")]
     public async Task<ActionResult<DatasetVersion>> CreateManualVersion(CreateManualVersionRequest request)
     {
         var createdVersion = await _versionService.CreateManualVersionAsync(
-            request.DatasetId, request.VersionNumber, request.Notes, request.Columns, request.Content);
+            request.DatasetId, request.VersionNumber, request.Notes, request.Columns, request.Content, request.OutcomeColumnIndex);
         return CreatedAtAction(nameof(GetVersion), new { id = createdVersion.Id }, createdVersion);
     }
 
@@ -65,12 +65,13 @@ public class VersionController : ControllerBase
 
     [HttpPost("upload")]
     public async Task<ActionResult<DatasetVersion>> UploadVersion(
-        [FromForm] int datasetId, 
-        [FromForm] string versionNumber, 
-        [FromForm] string notes, 
+        [FromForm] int datasetId,
+        [FromForm] string versionNumber,
+        [FromForm] string notes,
         IFormFile file,
         [FromForm] bool useFirstRowAsHeader = true,
-        [FromForm] string? manualColumns = null)
+        [FromForm] string? manualColumns = null,
+        [FromForm] int? outcomeColumnIndex = null)
     {
         if (file == null || file.Length == 0)
         {
@@ -78,17 +79,27 @@ public class VersionController : ControllerBase
         }
 
         var extension = Path.GetExtension(file.FileName).ToLower();
-        if (extension != ".txt" && extension != ".dat")
+        if (extension != ".txt" && extension != ".dat" && extension != ".csv")
         {
-            return BadRequest("Only .txt and .dat files are allowed");
+            return BadRequest("Only .txt, .dat and .csv files are allowed");
         }
 
         using (var stream = file.OpenReadStream())
         {
             var createdVersion = await _versionService.UploadVersionAsync(
-                datasetId, versionNumber, notes, file.FileName, stream, useFirstRowAsHeader, manualColumns);
+                datasetId, versionNumber, notes, file.FileName, stream, useFirstRowAsHeader, manualColumns, outcomeColumnIndex);
             return CreatedAtAction(nameof(GetVersion), new { id = createdVersion.Id }, createdVersion);
         }
+    }
+
+    public record UpdateOutcomeColumnRequest(int? OutcomeColumnIndex);
+
+    [HttpPatch("{id}/outcome-column")]
+    public async Task<ActionResult<DatasetVersion>> UpdateOutcomeColumn(int id, [FromBody] UpdateOutcomeColumnRequest request)
+    {
+        var version = await _versionService.UpdateOutcomeColumnIndexAsync(id, request.OutcomeColumnIndex);
+        if (version == null) return NotFound();
+        return Ok(version);
     }
 
     [HttpDelete("{id}")]
@@ -96,7 +107,7 @@ public class VersionController : ControllerBase
     {
         var result = await _versionService.DeleteVersionAsync(id);
         if (!result) return NotFound();
-        
+
         return NoContent();
     }
 }

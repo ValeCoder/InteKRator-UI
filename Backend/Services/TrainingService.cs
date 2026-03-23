@@ -60,11 +60,11 @@ namespace InteKRator_UI.Services
                 await dbContext.SaveChangesAsync();
                 
                  // We will run it in a background task to not block the API response
-                 _ = Task.Run(async () => await RunTrainingProcessAsync(jarPath, trainingResult.Id, datasetVersion.FilePath));
+                 _ = Task.Run(async () => await RunTrainingProcessAsync(jarPath, trainingResult.Id));
             }
         }
 
-        private async Task RunTrainingProcessAsync(string jarPath, int resultId, string inputFile)
+        private async Task RunTrainingProcessAsync(string jarPath, int resultId)
         {
             using (var scope = _scopeFactory.CreateScope())
             {
@@ -72,22 +72,39 @@ namespace InteKRator_UI.Services
                 var trainingResult = await dbContext.TrainingResults.FindAsync(resultId);
                 if (trainingResult == null) return;
 
+                var datasetVersion = await dbContext.DatasetVersions.FindAsync(trainingResult.DatasetVersionId);
+                string inputFile = datasetVersion?.FilePath ?? "";
+                string? tempFile = null;
+
                 try
                 {
+                    // Reorder columns if a non-last outcome column is configured
+                    if (datasetVersion != null && datasetVersion.OutcomeColumnIndex.HasValue
+                        && !string.IsNullOrEmpty(datasetVersion.FilePath)
+                        && System.IO.File.Exists(datasetVersion.FilePath))
+                    {
+                        var cols = datasetVersion.Columns?.Split(',') ?? [];
+                        int outcomeIdx = datasetVersion.OutcomeColumnIndex.Value;
+                        int lastIdx = cols.Length - 1;
+
+                        if (outcomeIdx != lastIdx)
+                        {
+                            tempFile = Path.Combine(Path.GetTempPath(), $"intekrator_train_{Guid.NewGuid()}.txt");
+                            await ReorderColumnsInFileAsync(datasetVersion.FilePath, tempFile, outcomeIdx);
+                            inputFile = tempFile;
+                        }
+                    }
+
                     // Define output file path
-                    // we want to save it in an "Uploads" or "Results" directory
                     var outputDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Results");
                     Directory.CreateDirectory(outputDir);
                     var outputFile = Path.Combine(outputDir, $"result_{resultId}_{DateTime.UtcNow.Ticks}.txt");
-                    
+
                     trainingResult.FilePath = outputFile;
 
                     var processStartInfo = new ProcessStartInfo
                     {
                         FileName = "java",
-                        // Using -learn parameters as per docs: -learn [OPTIONS] INFILE [OUTFILE]
-                        // Simple default: -learn top all INFILE OUTFILE
-                        // Docs say: java -jar InteKRator.jar PARAMETERS INFILE [OUTFILE]
                         Arguments = $"-jar \"{jarPath}\" -learn all \"{inputFile}\" \"{outputFile}\"",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -104,7 +121,6 @@ namespace InteKRator_UI.Services
                             throw new Exception("Failed to start process.");
                         }
 
-                        // Read output
                         var outputTask = process.StandardOutput.ReadToEndAsync();
                         var errorTask = process.StandardError.ReadToEndAsync();
 
@@ -115,9 +131,9 @@ namespace InteKRator_UI.Services
 
                         if (process.ExitCode != 0)
                         {
-                             throw new Exception($"Process exited with code {process.ExitCode}. Error: {error}");
+                            throw new Exception($"Process exited with code {process.ExitCode}. Error: {error}");
                         }
-                        
+
                         _logger.LogInformation($"Process output: {output}");
                     }
 
@@ -131,9 +147,29 @@ namespace InteKRator_UI.Services
                 }
                 finally
                 {
+                    if (tempFile != null && System.IO.File.Exists(tempFile))
+                        System.IO.File.Delete(tempFile);
+
                     await dbContext.SaveChangesAsync();
                 }
             }
+        }
+
+        private async Task ReorderColumnsInFileAsync(string inputFile, string outputFile, int outcomeIdx)
+        {
+            var lines = await System.IO.File.ReadAllLinesAsync(inputFile);
+            var reordered = lines.Select(line =>
+            {
+                var cells = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (outcomeIdx >= cells.Length) return line;
+
+                var result = new List<string>();
+                for (int i = 0; i < cells.Length; i++)
+                    if (i != outcomeIdx) result.Add(cells[i]);
+                result.Add(cells[outcomeIdx]);
+                return string.Join(" ", result);
+            });
+            await System.IO.File.WriteAllLinesAsync(outputFile, reordered);
         }
 
         public async Task<IEnumerable<Models.TrainingResult>> GetResultsByVersionIdAsync(int datasetVersionId)
